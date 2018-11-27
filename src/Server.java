@@ -8,63 +8,53 @@ import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.Scanner;
 
+@SuppressWarnings("ALL")
 public class Server {
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
-
-        // TCP
-        ServerSocket servSocket;
-        Socket fromClientSocket;
-
         int  tcpPort = 8888;
-        String str;
-        Item item;
+        ServerSocket ss = new ServerSocket(tcpPort);
+        Socket socket = null;
+        while(true)
+        try {
+            socket = ss.accept();
+            ClientHandler clientHandler = new ClientHandler(socket);
+            Thread thread = new ClientHandler(socket);
+        } catch (Exception e) {
+            socket.close();
+            e.printStackTrace();
+        }
 
+
+
+    }
+
+    public void udpServer() {
         DatagramSocket socket;
         int clientPort = 6788;
 
-        servSocket = new ServerSocket(tcpPort);
-        System.out.println("Waiting for connection on port " + tcpPort);
+        try{
+            socket = new DatagramSocket(clientPort);
+            byte[] data = new byte[1000];
 
-        fromClientSocket = servSocket.accept();
+            System.out.println("Server Running...");
 
-        ObjectOutputStream out = new ObjectOutputStream(fromClientSocket.getOutputStream());
+            while(true) {
+                DatagramPacket request = new DatagramPacket(data, data.length);
 
-        ObjectInputStream in = new ObjectInputStream(fromClientSocket.getInputStream());
+                socket.receive(request);
+                String [] arrayMsg = (new String(request.getData())).split(" ");
 
-        while ((item = (Item) in.readObject()) != null) {
-            item.printInfo();
+                byte[] replyMsg = ("Server Received at index 0: " + arrayMsg[0]).getBytes();
+                InetAddress address = request.getAddress();
+                int port = request.getPort();
+                DatagramPacket reply = new DatagramPacket(replyMsg, replyMsg.length, address, port);
+                socket.send(reply);
 
-            out.writeObject("bye bye");
-            break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        out.close();
-
-        fromClientSocket.close();
-
-//        try{
-//            socket = new DatagramSocket(clientPort);
-//            byte[] data = new byte[1000];
-//
-//            System.out.println("Server Running...");
-//
-//            while(true) {
-//                DatagramPacket request = new DatagramPacket(data, data.length);
-//
-//                socket.receive(request);
-//                String [] arrayMsg = (new String(request.getData())).split(" ");
-//
-//                byte[] replyMsg = ("Server Received at index 0: " + arrayMsg[0]).getBytes();
-//                InetAddress address = request.getAddress();
-//                int port = request.getPort();
-//                DatagramPacket reply = new DatagramPacket(replyMsg, replyMsg.length, address, port);
-//                socket.send(reply);
-//
-//            }
-//        } catch (SocketException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
+
 }

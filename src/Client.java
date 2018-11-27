@@ -2,75 +2,122 @@
 Client Class
  */
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.util.Scanner;
 
 public class Client {
 
+    private static ObjectOutputStream oos;
+    private static DataOutputStream dos;
+
+    private static ObjectInputStream ois;
+    private static  DataInputStream dis;
+
     public static void main(String args[]) {
+        tcpServer();
+    }
+
+    private static void tcpServer() {
+        InetAddress address;
+        int  tcpPort = 8888;
+
+        try {
+            Scanner in = new Scanner(System.in);
+            InetAddress host = InetAddress.getByName("localhost");
+            System.out.println("IP: " + host);
+            Socket socket = new Socket(InetAddress.getLocalHost(), tcpPort);
+
+            // TCP
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            dos = new DataOutputStream(socket.getOutputStream());
+
+            ois = new ObjectInputStream(socket.getInputStream());
+            dis = new DataInputStream(socket.getInputStream());
+
+
+            while (true) {
+                System.out.println(dis.readUTF());
+                String option = in.nextLine();
+                dos.writeUTF(option);
+
+                switch(option) {
+                    case "offer":
+                        offer();
+                        break;
+                    case "exit":
+                        System.out.println("Exiting the auction!");
+                        ois.close();
+                        oos.close();
+                        dis.close();
+                        dos.close();
+                        socket.close();
+                        break;
+
+                }
+
+            }
+//            Item item = msg.getItem();
+//            out.writeObject(item);
+//
+//            while ((str = (String) in.readObject()) != null) {
+//                System.out.println(str);
+//                out.writeObject("bye");
+//
+//                if (str.equals("bye"))
+//                    break;
+//            }
+
+        }
+        catch(Exception ignored){
+
+        }
+    }
+
+    public static void offer() throws IOException {
+        Scanner in = new Scanner(System.in);
+        System.out.println(dis.readUTF());
+        String itemName  = in.nextLine();
+        dos.writeUTF(itemName);
+
+        System.out.println(dis.readUTF());
+        String itemDescription  = in.nextLine();
+        dos.writeUTF(itemDescription);
+
+        System.out.println(dis.readUTF());
+        if(in.hasNextDouble()) {
+            double price = in.nextDouble();
+            dos.writeDouble(price);
+        } else {
+            dos.writeDouble(-1);
+        }
+
+
+        String response = dis.readUTF();
+        System.out.println(response);
+
+        if(response.contains("OFFER-CONF")) {
+            System.out.println("your item is now up for auction.");
+        } else if (response.contains("OFFER-DENIED")) {
+            // add switch case for all options
+            System.out.println("the item you are trying to put up is not valid!");
+        };
+    }
+
+    private static void udpServer() throws SocketException {
 
         DatagramSocket socket;
         DatagramPacket packet;
         InetAddress address;
 
-        System.out.println("Welcome to the Auction House.");
+
+        // UDP
+        socket = new DatagramSocket();
+
+         User user = new User();
 
 
-        int port = 6788;
-        int  tcpPort = 8888;
-        String str = "";
-        ObjectOutputStream out = null;
-        ObjectInputStream in = null;
-        Socket client = null;
-
-        try {
-            InetAddress host = InetAddress.getByName("localhost");
-
-            client = new Socket(InetAddress.getLocalHost(), tcpPort);
-
-            // TCP
-            out = new ObjectOutputStream(client.getOutputStream());
-            in = new ObjectInputStream(client.getInputStream());
-
-            // Gather item data
-            Scanner sc = new Scanner(System.in);
-            System.out.println("Please enter the name of the item.");
-            String name = sc.nextLine(); // add error validations
-
-            System.out.println("Please enter a description for the item.");
-            String description = sc.nextLine();
-
-            System.out.println("Please enter the starting price of the item.");
-            double minPrice = sc.nextDouble();
-            User owner = new User();
-            Item item = new Item(name, owner, description, minPrice);
-
-            out.writeObject(item);
-
-            while ((str = (String) in.readObject()) != null) {
-                System.out.println(str);
-                out.writeObject("bye");
-
-                if (str.equals("bye"))
-                    break;
-            }
-
-            in.close();
-            out.close();
-            client.close();
-
-            // UDP
-            socket = new DatagramSocket();
-
-
-            // byte[] message = input.getBytes();
-
-            // create request and send packet
+        // create request and send packet
 //            DatagramPacket request = new DatagramPacket(message, message.length, host, port);
 //            socket.send(request);
 //
@@ -79,11 +126,7 @@ public class Client {
 //            DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 //            socket.receive(reply);
 //            System.out.println("Client Received: " + new String(reply.getData()));
-//
-//            socket.close();
-        }
-        catch(Exception e){
 
-        }
+            socket.close();
     }
 }
