@@ -59,6 +59,7 @@ public class Client {
 
                         msg = (Message) ois.readObject();
                         System.out.println(msg + "\n");
+                        System.out.println(msg.getItem().getStartTime());
                         break;
                     case "exit":
                         System.out.println("Exiting the auction!");
