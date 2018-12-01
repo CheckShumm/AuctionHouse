@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClientHandler extends Thread{
 
@@ -13,11 +15,12 @@ public class ClientHandler extends Thread{
     private DataOutputStream dos;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
+    
     private User user;
-    private int requestCount;
+    private Message msg;
+  
 
     public ClientHandler(Socket socket) throws IOException {
-        requestCount = 0;
         this.socket = socket;
         user = new User();
 
@@ -26,7 +29,7 @@ public class ClientHandler extends Thread{
     }
     @Override
     public void run() {
-        System.out.print("Server is running");
+        System.out.println("Server is running");
         while (true) {
             try {
 
@@ -35,14 +38,10 @@ public class ClientHandler extends Thread{
 
                 ois = new ObjectInputStream(socket.getInputStream());
                 dis = new DataInputStream(socket.getInputStream());
-
-
-                dos.writeUTF("Welcome to the Auction House.\n"+
-                        "What would you like to do?\n" + printOptions());
-                String option = dis.readUTF();
-                requestCount++;
-                switch(option) {
-                    case "offer":
+                
+                msg = (Message)ois.readObject();
+                switch(msg.getType()) {
+                    case "OFFER":
                         offer();
                         if (item.getMinPrice() < 0 ) {
                             offerDenied("price not valid");
@@ -70,37 +69,24 @@ public class ClientHandler extends Thread{
 //                fromClientSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
-    public void offer() throws IOException {
-        dos.writeUTF("Enter name of the item.");
-        String itemName = dis.readUTF();
+    public void offer() throws IOException, ClassNotFoundException {
+        item = msg.getItem();
+        System.out.println(msg);
 
-        dos.writeUTF("Enter item description.");
-        String itemDescription = dis.readUTF();
-
-        dos.writeUTF("What is the starting bid for " + itemName);
-        double minPrice = dis.readDouble();
-
-        item = new Item(itemName, user, itemDescription, minPrice);
-        System.out.println("OFFER " + requestCount +
-                " " + item.getName() +
-                " " + item.getDescription() +
-                " " + item.getMinPrice());
     }
 
     public void offerConfirm() throws IOException {
-        dos.writeUTF("OFFER-CONF " + requestCount +
-                " " + item.getName() +
-                " " + item.getDescription() +
-                " " + item.getMinPrice());
-        oos.writeObject(item);
+      // send offer confirmed MSG
     }
 
     public void offerDenied(String err) throws IOException {
-        dos.writeUTF("OFFER-DENIED " + requestCount + " " + err);
+       // send offer denied MSG
     }
 
     public String printOptions() throws IOException {

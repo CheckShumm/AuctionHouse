@@ -7,7 +7,10 @@ import java.net.*;
 import java.util.Scanner;
 
 public class Client {
-
+    
+    private static User user = new User();
+    private static Message msg = new Message();
+    
     private static ObjectOutputStream oos;
     private static DataOutputStream dos;
 
@@ -34,17 +37,28 @@ public class Client {
 
             ois = new ObjectInputStream(socket.getInputStream());
             dis = new DataInputStream(socket.getInputStream());
-
-
+            
+      
+            ItemOffer itemOffer = new ItemOffer(user);
+          
+            
             while (true) {
-                System.out.println(dis.readUTF());
+                // asks for user input
+                System.out.println(printOptions());
+                
+                // reads user input
                 String option = in.nextLine();
-                dos.writeUTF(option);
-
+                
+                // decides what to do based on user input
                 switch(option) {
                     case "offer":
-                        offer();
+                        Item item = itemOffer.offer();
+                        msg.setItem(item);
+                        msg.setType("OFFER");              
+                        oos.writeObject(msg);
+              
                         break;
+                        
                     case "exit":
                         System.out.println("Exiting the auction!");
                         ois.close();
@@ -53,20 +67,11 @@ public class Client {
                         dos.close();
                         socket.close();
                         break;
+        
 
                 }
 
             }
-//            Item item = msg.getItem();
-//            out.writeObject(item);
-//
-//            while ((str = (String) in.readObject()) != null) {
-//                System.out.println(str);
-//                out.writeObject("bye");
-//
-//                if (str.equals("bye"))
-//                    break;
-//            }
 
         }
         catch(Exception ignored){
@@ -129,4 +134,12 @@ public class Client {
 
             socket.close();
     }
+    
+    public static String printOptions() throws IOException {
+        return ("Enter 'offer' to put an item up for auction\n"+
+                "Enter 'bid' if you would like to bid on an item\n"+
+                "Enter 'exit' if you would like to exit");
+    }
+    
+   
 }
