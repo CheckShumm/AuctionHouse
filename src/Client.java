@@ -56,6 +56,7 @@ public class Client {
                         msg.setType("OFFER");
                         oos.writeObject(msg);
                         oos.flush();
+
                         msg = (Message) ois.readObject();
                         System.out.println(msg + "\n");
                         break;
@@ -70,7 +71,8 @@ public class Client {
                 }
             }
         }
-        catch(Exception ignored){
+        catch(Exception e){
+            e.printStackTrace();
         }
     }
 

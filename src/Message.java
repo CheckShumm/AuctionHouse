@@ -16,7 +16,9 @@ public class Message implements Serializable{
     private Item item;
     private String type;
     private User user;
-    
+    private String reason;
+
+
     public Message(){
         this.type = "default";
     }
@@ -44,7 +46,15 @@ public class Message implements Serializable{
     public void setUser(User user) {
         this.user = user;
     }
-    
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -59,8 +69,8 @@ public class Message implements Serializable{
             case "OFFER-CONF":
                 sb.append(type + " 1 " + item.getName() + " " + item.getDescription() + " " + item.getMinPrice());
                 break;
-            case "NEW-ITEM":
-                sb.append(type + " 1 " + item.getDescription() + item.getMinPrice());
+            case "OFFER-DENIED":
+                sb.append(type + " 1 " + this.reason);
             default:
                 break;
 

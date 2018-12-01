@@ -76,6 +76,7 @@ public class ClientHandler extends Thread{
         this.msg.setType("OFFER-CONF");
         oos.writeObject(msg);
         oos.flush();
+
         msg.setType("NEW-ITEM");
         //notifyUsers();
     }
@@ -87,6 +88,7 @@ public class ClientHandler extends Thread{
             try {
                 oos.writeObject(msg);
                 oos.flush();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -95,7 +97,10 @@ public class ClientHandler extends Thread{
 
     private void offerDenied(String err) throws IOException {
        // send offer denied MSG
-        System.out.println("OFFER-DENIED");
+        this.msg.setType("OFFER-DENIED");
+        this.msg.setReason(err);
+        oos.writeObject(msg);
+        oos.flush();
     }
 
 
