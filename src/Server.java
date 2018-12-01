@@ -12,33 +12,59 @@ import java.util.Scanner;
 @SuppressWarnings("ALL")
 public class Server {
 
-    private static int  tcpPort = 3333;
+    //gets configuration from config.properties file
+    private Environment env = new Environment();
 
-    private  ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+    InetAddress serverAddress;
+
+    private int serverUDPPort;
+    private int serverTCPPort;
+
+    public static ClientHandlers clientHandlers;
+
     private  ServerSocket ss;
     private  Socket socket = null;
     private  Boolean isRunning = true;
-    public  AuctionTimer auctionTimer;
+    public  static AuctionTimer auctionTimer;
+
+    DatagramSocket udpSocket;
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
         new Server();
     }
 
     public Server() throws IOException {
-        ss = new ServerSocket(tcpPort);
-        System.out.println("Server is running");
-        auctionTimer = new AuctionTimer();
 
-            while(isRunning)
-                try {
-                socket = ss.accept();
-                ClientHandler clientHandler = new ClientHandler(socket,this);
-                clientHandler.start();
-                auctionTimer.start();
-                clientHandlers.add(clientHandler);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        serverUDPPort = Integer.parseInt(env.get("SERVER_PORT_UDP", "3332"));
+        serverTCPPort = Integer.parseInt(env.get("SERVER_PORT_TCP", "3333"));
+
+        udpSocket = new DatagramSocket(serverUDPPort, serverAddress);
+        ss = new ServerSocket(serverTCPPort);
+
+        clientHandlers = ClientHandlers.getInstance();
+
+        auctionTimer = new AuctionTimer();
+        auctionTimer.run();
+
+        System.out.println("Server is running");
+
+        try {
+            Thread tcpSockets = new Thread () {
+                public void run () {
+                    try {
+                        socket = ss.accept();
+                        ClientHandler clientHandler = new ClientHandler(socket);
+                        clientHandlers.add(clientHandler);
+                        clientHandler.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            tcpSockets.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void udpServer() {
@@ -67,10 +93,6 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public  ArrayList<ClientHandler> getClientHandlers() {
-        return clientHandlers;
     }
 
 }

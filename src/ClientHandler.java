@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -6,8 +7,11 @@ import java.util.logging.Logger;
 
 public class ClientHandler extends Thread{
 
+    //UDP
+    DatagramSocket udpSocket = null;
+
     // TCP
-    private Socket socket;
+    private Socket socket = null;
     private Item item;
 
     private DataInputStream dis;
@@ -17,12 +21,15 @@ public class ClientHandler extends Thread{
     
     private User user;
     private Message msg;
-    private Server server;
 
-    public ClientHandler(Socket socket, Server server) throws IOException {
+    public ClientHandler(Socket socket) throws IOException {
         this.socket = socket;
         this.user = new User();
-        this.server = server;
+    }
+
+    public ClientHandler(DatagramSocket udpsocket) throws IOException {
+        this.udpSocket = udpsocket;
+        this.user = new User();
     }
 
     @Override
@@ -36,6 +43,8 @@ public class ClientHandler extends Thread{
 
             while (true) {
                 this.msg = (Message)ois.readObject();
+//                if(socket!=null) this.msg = (Message)ois.readObject();
+//                if(udpSocket!=null) this.msg = (Message)ois.readObject();
                 switch(msg.getType()) {
                     case "OFFER":
                         offer();
@@ -74,7 +83,7 @@ public class ClientHandler extends Thread{
     private void offerConfirm() throws IOException {
       // send offer confirmed MSG
         this.msg.setType("OFFER-CONF");
-        msg.getItem().setStartTime(server.auctionTimer.getElapsedTime());
+        msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
         oos.writeObject(msg);
         oos.flush();
         //notifyUsers();
@@ -82,12 +91,11 @@ public class ClientHandler extends Thread{
 
     private void notifyUsers() {
         System.out.println("HERE!");
-        for(int i = 0; i < server.getClientHandlers().size(); i++) {
-            ClientHandler handler = server.getClientHandlers().get(i);
+        for(int i = 0; i < ClientHandlers.getInstance().getArray().size(); i++) {
+            ClientHandler handler = ClientHandlers.getInstance().getArray().get(i);
             try {
                 oos.writeObject(msg);
                 oos.flush();
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
