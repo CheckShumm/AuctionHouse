@@ -6,27 +6,35 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 @SuppressWarnings("ALL")
 public class Server {
 
+    private static int  tcpPort = 3333;
+
+    private  ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+    private  ServerSocket ss;
+    private  Socket socket = null;
+    private  Boolean isRunning = true;
+
     public static void main(String args[]) throws IOException, ClassNotFoundException {
-        int  tcpPort = 8888;
-        ServerSocket ss = new ServerSocket(tcpPort);
-        Socket socket = null;
-        while(true)
-        try {
-            socket = ss.accept();
-            ClientHandler clientHandler = new ClientHandler(socket);
-            Thread thread = new ClientHandler(socket);
-        } catch (Exception e) {
-            socket.close();
-            e.printStackTrace();
-        }
+        new Server();
+    }
 
-
-
+    public Server() throws IOException {
+        ss = new ServerSocket(tcpPort);
+        System.out.println("Server is running");
+            while(isRunning)
+                try {
+                socket = ss.accept();
+                ClientHandler clientHandler = new ClientHandler(socket,this);
+                clientHandler.start();
+                clientHandlers.add(clientHandler);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
     }
 
     public void udpServer() {
@@ -55,6 +63,10 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public  ArrayList<ClientHandler> getClientHandlers() {
+        return clientHandlers;
     }
 
 }

@@ -18,7 +18,7 @@ public class Message implements Serializable{
     private User user;
     
     public Message(){
-           
+        this.type = "default";
     }
     
     public Item getItem() {
@@ -52,12 +52,19 @@ public class Message implements Serializable{
             case "OFFER":
                 sb.append(type + " ");
                 sb.append('1' + " "); // user.getRequestCount();
-                sb.append(item.getName()+ " ");
+                sb.append(item.getName() + " ");
                 sb.append(item.getDescription() + " ");
                 sb.append(item.getMinPrice());
-                
+                break;
+            case "OFFER-CONF":
+                sb.append(type + " 1 " + item.getName() + " " + item.getDescription() + " " + item.getMinPrice());
+                break;
+            case "NEW-ITEM":
+                sb.append(type + " 1 " + item.getDescription() + item.getMinPrice());
+            default:
+                break;
+
         }
-        
         return sb.toString();
     }
     
