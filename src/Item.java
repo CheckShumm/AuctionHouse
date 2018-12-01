@@ -8,7 +8,7 @@ public class Item implements Serializable {
     private String description;
     private double minPrice;
     private Boolean sold;
-    private double startTime;
+    private int startTime;
     private ArrayList<User> bidders = new ArrayList();
 
     public Item(String name, User owner, String description, double minPrice) {
@@ -76,7 +76,7 @@ public class Item implements Serializable {
         return startTime;
     }
 
-    public void setStartTime(double startTime) {
+    public void setStartTime(int startTime) {
         this.startTime = startTime;
     }
 

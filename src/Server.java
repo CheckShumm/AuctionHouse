@@ -18,6 +18,7 @@ public class Server {
     private  ServerSocket ss;
     private  Socket socket = null;
     private  Boolean isRunning = true;
+    public  AuctionTimer auctionTimer;
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
         new Server();
@@ -26,11 +27,14 @@ public class Server {
     public Server() throws IOException {
         ss = new ServerSocket(tcpPort);
         System.out.println("Server is running");
+        auctionTimer = new AuctionTimer();
+
             while(isRunning)
                 try {
                 socket = ss.accept();
                 ClientHandler clientHandler = new ClientHandler(socket,this);
                 clientHandler.start();
+                auctionTimer.start();
                 clientHandlers.add(clientHandler);
             } catch (Exception e) {
                 e.printStackTrace();
