@@ -5,8 +5,10 @@ public class Item implements Serializable {
 
     private String name;
     private User owner;
+    private int itemNumber;
     private String description;
     private double minPrice;
+    private double currentBid;
     private Boolean sold;
     private int startTime;
     private ArrayList<User> bidders = new ArrayList();
@@ -78,6 +80,14 @@ public class Item implements Serializable {
 
     public void setStartTime(int startTime) {
         this.startTime = startTime;
+    }
+
+    public int getItemNumber() {
+        return itemNumber;
+    }
+
+    public void setItemNumber(int itemNumber) {
+        this.itemNumber = itemNumber;
     }
 
     public ArrayList<User> getBidders() {

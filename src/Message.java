@@ -61,9 +61,9 @@ public class Message implements Serializable{
         StringBuilder sb = new StringBuilder();
         switch(type) {
             case MessageType.REGISTER:
-                sb.append(type + " ");
-                sb.append("Attempt to register ");
-                sb.append(user.getUsername());
+                sb.append(type).append(" ")
+                .append("Attempt to register ")
+                .append(user.getUsername());
                 break;
             case MessageType.REGISTERED:
                 sb.append(type + " ");
@@ -89,6 +89,11 @@ public class Message implements Serializable{
             case MessageType.OFFER_DENIED:
                 sb.append(type + " 1 " + this.reason);
             default:
+            case MessageType.NEW:
+                sb.append(type + " ")
+                        .append("item number ")
+                        .append(item.getDescription() + " ")
+                        .append(item.getMinPrice() + " ");
                 break;
 
         }

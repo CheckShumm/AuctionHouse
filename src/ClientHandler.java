@@ -11,8 +11,6 @@ public class ClientHandler extends Thread{
     private Socket socket = null;
     private Item item;
 
-    private DataInputStream dis;
-    private DataOutputStream dos;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
 
@@ -28,10 +26,7 @@ public class ClientHandler extends Thread{
     public void run() {
         try {
             this.oos = new ObjectOutputStream(socket.getOutputStream());
-            this.dos = new DataOutputStream(socket.getOutputStream());
-
             this.ois = new ObjectInputStream(socket.getInputStream());
-            this.dis = new DataInputStream(socket.getInputStream());
 
             while (true) {
                 this.msg = (Message)ois.readObject();
@@ -76,18 +71,21 @@ public class ClientHandler extends Thread{
         msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
         oos.writeObject(msg);
         oos.flush();
-        //notifyUsers();
+        notifyUsers(MessageType.NEW);
     }
 
-    private void notifyUsers() {
-        System.out.println("HERE!");
+    private void notifyUsers(String type) {
         for(int i = 0; i < ClientHandlers.getInstance().getArray().size(); i++) {
             ClientHandler handler = ClientHandlers.getInstance().getArray().get(i);
-            try {
-                oos.writeObject(msg);
-                oos.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if(handler != this) {
+                try {
+                    System.out.println("Sending Message");
+                    msg.setType(type);
+                    handler.getOos().writeObject(msg);
+                    handler.getOos().flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -100,5 +98,7 @@ public class ClientHandler extends Thread{
         oos.flush();
     }
 
-
+    public ObjectOutputStream getOos() {
+        return oos;
+    }
 }

@@ -17,6 +17,7 @@ public class Client {
     
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
+    private ObjectInputStream globalInputStream;
 
     InetAddress serverAddress;
     InetAddress clientAddress;
@@ -51,14 +52,12 @@ public class Client {
             System.out.println("Server is not found");
             e.printStackTrace();
         }
-
     }
 
     private void load() {
 
         try {
             Scanner in = new Scanner(System.in);
-            System.out.println("Client IP: " + clientAddress);
 
             DatagramSocket udpSocket = new DatagramSocket();
             Socket socket = new Socket(serverAddress, clientTCPPort);
@@ -67,12 +66,14 @@ public class Client {
 
             // let server know client is connected
             msg.setType("CONNECT");
-            // oos.writeObject(msg);
             oos.flush(); // flush stream
 
             ois = new ObjectInputStream(socket.getInputStream());
 
             System.out.println("Welcome to Auction House!");
+
+            Listener listener = new Listener(socket);
+            listener.start();
 
             Thread menu = new Thread(() -> {
                 while (true) {
@@ -104,8 +105,9 @@ public class Client {
                                 msg.setType(MessageType.OFFER);
                                 oos.writeObject(msg);
                                 oos.flush();
-
+                                System.out.println("Hanging");
                                 msg = (Message) ois.readObject();
+                                System.out.println("Still Hanging");
                                 System.out.println(msg + "\n");
                                 System.out.println(msg.getItem().getStartTime());
                                 break;
@@ -118,6 +120,7 @@ public class Client {
                         }
                     } catch (IOException e) {
                         System.out.println("Client menu IO exception!");
+                        e.printStackTrace();
                     } catch (ClassNotFoundException e) {
                         System.out.println("Client packet receive not a message type!");
                     }
@@ -137,13 +140,13 @@ public class Client {
 
     private Item offer() {
         Scanner in = new Scanner(System.in);
-        System.out.println("Enter name of the item?");
+        System.out.println("What is the name of your item?");
         String itemName = in.nextLine();
 
         System.out.println("Please give a short description of your item.");
         String itemDescription = in.nextLine();
 
-        System.out.println("What is the starting bid for " + itemName);
+        System.out.println("What is the starting price for " + itemName);
         double minPrice = in.nextDouble();
 
         Item item = new Item(itemName, user, itemDescription, minPrice);

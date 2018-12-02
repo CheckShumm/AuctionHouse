@@ -11,6 +11,7 @@ public class MessageType {
     public static final String OFFER = "OFFER";
     public static final String OFFER_CONFIRM = "OFFER-CONF";
     public static final String OFFER_DENIED = "OFFER-DENIED";
+    public static final String NEW = "NEW";
 
     //Bid types
     public static final String BID = "BID";
