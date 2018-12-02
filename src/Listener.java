@@ -10,8 +10,8 @@ public class Listener extends Thread{
     private ObjectInputStream ois;
     private Client client;
 
-    public Listener(ObjectInputStream ois, Client client) throws IOException {
-        this.ois = ois;
+    public Listener(Socket socket, Client client) throws IOException {
+        this.ois = new ObjectInputStream(socket.getInputStream());
         this.message = new Message();
         this.client = client;
     }

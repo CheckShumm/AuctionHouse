@@ -19,6 +19,8 @@ public class Message implements Serializable{
     private String type;
     private User user;
     private String reason;
+    private double amount;
+    private String itemName; // For Bidding
 
     public Message(){
         this.type = "default";
@@ -56,6 +58,22 @@ public class Message implements Serializable{
         this.reason = reason;
     }
 
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -88,12 +106,25 @@ public class Message implements Serializable{
                 break;
             case MessageType.OFFER_DENIED:
                 sb.append(type + " 1 " + this.reason);
-            default:
             case MessageType.NEW:
                 sb.append(type + " ")
-                        .append("item number ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
                         .append(item.getDescription() + " ")
                         .append(item.getMinPrice() + " ");
+                break;
+            case MessageType.BID:
+                sb.append(MessageType.BID + " ")
+                        .append("Request Count ")
+                        .append(item.getItemNumber() + " ")
+                        .append(this.amount);
+                break;
+            case MessageType.HIGHEST:
+                sb.append(MessageType.HIGHEST + " ")
+                        .append("#" + item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid());
+            default:
                 break;
 
         }

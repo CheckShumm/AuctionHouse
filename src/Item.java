@@ -20,6 +20,7 @@ public class Item implements Serializable {
         this.description = description;
         this.minPrice = minPrice;
         this.sold = false;
+        this.currentBid = minPrice;
     }
 
     @Override
@@ -96,5 +97,13 @@ public class Item implements Serializable {
 
     public void setBidders(ArrayList<User> bidders) {
         this.bidders = bidders;
+    }
+
+    public double getCurrentBid() {
+        return currentBid;
+    }
+
+    public void setCurrentBid(double currentBid) {
+        this.currentBid = currentBid;
     }
 }

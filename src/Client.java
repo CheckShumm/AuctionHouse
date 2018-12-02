@@ -69,13 +69,10 @@ public class Client {
             // let server know client is connected
             msg.setType("CONNECT");
             oos.flush(); // flush stream
-
-            ois = new ObjectInputStream(socket.getInputStream());
-
             System.out.println("Welcome to Auction House!");
 
-            Listener listener = new Listener(ois, this);
-
+            Listener listener = new Listener(socket, this);
+            listener.start();
             Thread menu = new Thread(() -> {
                 while (true) {
                     try {
@@ -107,12 +104,19 @@ public class Client {
                                     msg.setItem(offer());
                                     msg.setType(MessageType.OFFER);
                                     System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
-                                    oos.writeObject(msg);
+                                    oos.writeUnshared(msg);
                                     oos.flush();
                                     offerCount++;
                                     Thread.sleep(1000);
                                 }
                                 inputMessage.setType(MessageType.NULL);
+                                break;
+                            case MessageType.BID:
+                                msg.setType(MessageType.BID);
+                                bid();
+                                System.out.println("Bidding on " + msg.getItemName());
+                                oos.writeUnshared(msg);
+                                oos.flush();
                                 break;
                             case "exit":
                                 System.out.println("Exiting the auction!");
@@ -133,7 +137,6 @@ public class Client {
             });
 
             menu.start();
-            listener.start();
         }
         catch (ConnectException e) {
             System.out.println("Unable to connect to server with tcp");
@@ -158,6 +161,18 @@ public class Client {
         Item item = new Item(itemName, user, itemDescription, minPrice);
 
         return item;
+    }
+
+    private void bid() {
+        Scanner in = new Scanner(System.in);
+        System.out.println("What item would you like to bid on?");
+        String itemName = in.nextLine();
+        msg.setItemName(itemName);
+
+        System.out.println("How much would you like to offer?");
+        double amount = in.nextDouble();
+        msg.setAmount(amount);
+
     }
 
     private User registerForm() {
