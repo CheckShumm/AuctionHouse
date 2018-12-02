@@ -67,7 +67,7 @@ public class ClientHandler extends Thread{
 
     private void offerConfirm() throws IOException {
       // send offer confirmed MSG
-        this.msg.setType("OFFER-CONF");
+        this.msg.setType(MessageType.OFFER_CONFIRM);
         msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
         oos.writeObject(msg);
         oos.flush();

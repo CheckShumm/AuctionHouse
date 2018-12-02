@@ -6,35 +6,23 @@ import java.net.Socket;
 public class Listener extends Thread{
 
     private Socket socket = null;
-
-    private ObjectOutputStream oos;
-    private ObjectInputStream ois;
-
     private Message message;
+    private ObjectInputStream ois;
+    private Client client;
 
-    public Listener(Socket socket) throws IOException {
-        this.socket = socket;
+    public Listener(ObjectInputStream ois, Client client) throws IOException {
+        this.ois = ois;
         this.message = new Message();
+        this.client = client;
     }
 
     @Override
     public void run() {
         try {
-            this.oos = new ObjectOutputStream(socket.getOutputStream());
-            this.oos.flush();
-            this.ois = new ObjectInputStream(socket.getInputStream());
             while(true) {
                 this.message = (Message) ois.readObject();
-                switch(message.getType()) {
-                    case MessageType.WIN:
-                        System.out.println(message.toString());
-                        break;
-                    case MessageType.NEW:
-                        System.out.println(message.toString());
-                        break;
-                    default:
-                        break;
-            }
+                System.out.println(message);
+                client.setInputMessage(this.message);
             }
 
         } catch (IOException | ClassNotFoundException e) {

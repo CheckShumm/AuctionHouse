@@ -13,8 +13,10 @@ public class Client {
     private Environment env = new Environment();
 
     private User user;
+
     private Message msg = new Message();
-    
+    private Message inputMessage = new Message();
+
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
     private ObjectInputStream globalInputStream;
@@ -72,8 +74,7 @@ public class Client {
 
             System.out.println("Welcome to Auction House!");
 
-            Listener listener = new Listener(socket);
-            listener.start();
+            Listener listener = new Listener(ois, this);
 
             Thread menu = new Thread(() -> {
                 while (true) {
@@ -102,14 +103,15 @@ public class Client {
                                 break;
                             case MessageType.OFFER:
                                 msg.setItem(offer());
-                                msg.setType(MessageType.OFFER);
-                                oos.writeObject(msg);
-                                oos.flush();
-                                System.out.println("Hanging");
-                                msg = (Message) ois.readObject();
-                                System.out.println("Still Hanging");
-                                System.out.println(msg + "\n");
-                                System.out.println(msg.getItem().getStartTime());
+                                int offerCount = 0;
+                                while(!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
+                                    msg.setType(MessageType.OFFER);
+                                    System.out.println("sending item offer");
+                                    oos.writeObject(msg);
+                                    oos.flush();
+                                    offerCount++;
+                                    Thread.sleep(2000);
+                                }
                                 break;
                             case "exit":
                                 System.out.println("Exiting the auction!");
@@ -123,11 +125,14 @@ public class Client {
                         e.printStackTrace();
                     } catch (ClassNotFoundException e) {
                         System.out.println("Client packet receive not a message type!");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             });
 
             menu.start();
+            listener.start();
         }
         catch (ConnectException e) {
             System.out.println("Unable to connect to server with tcp");
@@ -175,6 +180,10 @@ public class Client {
                     "Enter 'exit' if you would like to exit");
         }
 
+    }
+
+    public void setInputMessage(Message inputMessage) {
+        this.inputMessage = inputMessage;
     }
 
     public static void main(String args[]) {
