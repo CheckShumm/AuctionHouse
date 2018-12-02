@@ -102,16 +102,17 @@ public class Client {
                                 System.out.println(msg + "\n");
                                 break;
                             case MessageType.OFFER:
-                                msg.setItem(offer());
                                 int offerCount = 0;
                                 while(!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
+                                    msg.setItem(offer());
                                     msg.setType(MessageType.OFFER);
-                                    System.out.println("sending item offer");
+                                    System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
                                     oos.writeObject(msg);
                                     oos.flush();
                                     offerCount++;
-                                    Thread.sleep(2000);
+                                    Thread.sleep(1000);
                                 }
+                                inputMessage.setType(MessageType.NULL);
                                 break;
                             case "exit":
                                 System.out.println("Exiting the auction!");

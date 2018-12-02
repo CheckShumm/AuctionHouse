@@ -21,4 +21,6 @@ public class MessageType {
     public static final String SOLDTO = "SOLDTO";
     public static final String NOT_SOLD = "NOT-SOLD";
 
+    public static final String NULL = "NULL";
+
 }

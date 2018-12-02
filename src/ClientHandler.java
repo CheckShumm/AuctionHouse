@@ -62,8 +62,8 @@ public class ClientHandler extends Thread{
     private void offer() throws IOException, ClassNotFoundException {
         item = msg.getItem();
         System.out.println(msg);
-
     }
+
 
     private void offerConfirm() throws IOException {
       // send offer confirmed MSG
