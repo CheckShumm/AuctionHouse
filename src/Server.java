@@ -1,15 +1,10 @@
 /*
-Client Class
+    Server processes UDP and TCP depending on the message type.
  */
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Scanner;
 
-@SuppressWarnings("ALL")
 public class Server {
 
     //gets configuration from config.properties file
@@ -20,14 +15,17 @@ public class Server {
     private int serverUDPPort;
     private int serverTCPPort;
 
-    public static ClientHandlers clientHandlers;
+    private ClientHandlers clientHandlers;
+    private UDPHandlers udpHandlers;
 
     private  ServerSocket ss;
     private  Socket socket = null;
     private  Boolean isRunning = true;
     public  static AuctionTimer auctionTimer;
 
+    //UDP
     DatagramSocket udpSocket;
+    private byte[] buf = new byte[256];
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
         new Server();
@@ -42,6 +40,7 @@ public class Server {
         ss = new ServerSocket(serverTCPPort);
 
         clientHandlers = ClientHandlers.getInstance();
+        udpHandlers = UDPHandlers.getInstance();
 
         auctionTimer = new AuctionTimer();
         auctionTimer.run();
@@ -52,45 +51,46 @@ public class Server {
             Thread tcpSockets = new Thread () {
                 public void run () {
                     try {
-                        socket = ss.accept();
-                        ClientHandler clientHandler = new ClientHandler(socket);
-                        clientHandlers.add(clientHandler);
-                        clientHandler.start();
+                        while(true)
+                        {
+                            socket = ss.accept();
+                            ClientHandler clientHandler = new ClientHandler(socket);
+                            clientHandlers.add(clientHandler);
+                            clientHandler.start();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             };
+            Thread udpSockets = new Thread () {
+                public void run () {
+                    try {
+                        while(true)
+                        {
+                            //Receive UDP Packet
+                            DatagramPacket packet
+                                    = new DatagramPacket(buf, buf.length);
+                            udpSocket.receive(packet);
+
+                            //Output packet
+                            Message incomingMsg = (Message) Help.deserialize(packet.getData());
+                            System.out.println(incomingMsg);
+
+                            UDPHandler udpHandler = new UDPHandler(udpSocket, packet);
+                            udpHandlers.add(udpHandler);
+                            udpHandler.start();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            udpSockets.start();
             tcpSockets.start();
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void udpServer() {
-        DatagramSocket socket;
-        int clientPort = 6788;
-
-        try{
-            socket = new DatagramSocket(clientPort);
-            byte[] data = new byte[1000];
-
-            System.out.println("Server Running...");
-
-            while(true) {
-                DatagramPacket request = new DatagramPacket(data, data.length);
-
-                socket.receive(request);
-                String [] arrayMsg = (new String(request.getData())).split(" ");
-
-                byte[] replyMsg = ("Server Received at index 0: " + arrayMsg[0]).getBytes();
-                InetAddress address = request.getAddress();
-                int port = request.getPort();
-                DatagramPacket reply = new DatagramPacket(replyMsg, replyMsg.length, address, port);
-                socket.send(reply);
-
-            }
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }

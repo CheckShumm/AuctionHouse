@@ -16,11 +16,13 @@ public class ClientHandlers  {
 
         list = new ArrayList<ClientHandler>();
     }
+
     // retrieve array from anywhere
     public ArrayList<ClientHandler> getArray() {
 
         return this.list;
     }
+
     //Add element to array
     public void add(ClientHandler clientHandler)
     {

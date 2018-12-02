@@ -7,9 +7,6 @@ import java.util.logging.Logger;
 
 public class ClientHandler extends Thread{
 
-    //UDP
-    DatagramSocket udpSocket = null;
-
     // TCP
     private Socket socket = null;
     private Item item;
@@ -18,17 +15,12 @@ public class ClientHandler extends Thread{
     private DataOutputStream dos;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
-    
+
     private User user;
     private Message msg;
 
     public ClientHandler(Socket socket) throws IOException {
         this.socket = socket;
-        this.user = new User();
-    }
-
-    public ClientHandler(DatagramSocket udpsocket) throws IOException {
-        this.udpSocket = udpsocket;
         this.user = new User();
     }
 
@@ -43,8 +35,6 @@ public class ClientHandler extends Thread{
 
             while (true) {
                 this.msg = (Message)ois.readObject();
-//                if(socket!=null) this.msg = (Message)ois.readObject();
-//                if(udpSocket!=null) this.msg = (Message)ois.readObject();
                 switch(msg.getType()) {
                     case "OFFER":
                         offer();

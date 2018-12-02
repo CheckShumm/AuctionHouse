@@ -11,17 +11,17 @@ public class Client {
 
     //gets configuration from config.properties file
     private Environment env = new Environment();
+
     private User user;
     private Message msg = new Message();
     
     private ObjectOutputStream oos;
-    private DataOutputStream dos;
-
     private ObjectInputStream ois;
-    private DataInputStream dis;
 
     InetAddress serverAddress;
     InetAddress clientAddress;
+
+    DatagramPacket packet;
 
     private int serverUDPPort;
     private int serverTCPPort;
@@ -29,6 +29,7 @@ public class Client {
     private int clientUDPPort;
     private int clientTCPPort;
 
+    //UDP buffer
     private byte[] buf = new byte[256];
 
     private boolean isOn = true;
@@ -39,9 +40,6 @@ public class Client {
             //set client configuration
             clientAddress = InetAddress.getByName("localhost");
             serverAddress = InetAddress.getByName(env.get("SERVER_ADDRESS", "localhost"));
-//            serverUDPPort = Integer.parseInt(env.get("SERVER_PORT_UDP", "3332"));
-//            serverTCPPort = Integer.parseInt(env.get("SERVER_PORT_TCP", "3333"));
-
             clientUDPPort = Integer.parseInt(env.get("SERVER_PORT_UDP", "3332"));
             clientTCPPort = Integer.parseInt(env.get("SERVER_PORT_TCP", "3333"));
 
@@ -63,11 +61,9 @@ public class Client {
             System.out.println("Client IP: " + clientAddress);
 
             DatagramSocket udpSocket = new DatagramSocket();
-
             Socket socket = new Socket(serverAddress, clientTCPPort);
 
             oos = new ObjectOutputStream(socket.getOutputStream());
-//            dos = new DataOutputStream(socket.getOutputStream());
 
             // let server know client is connected
             msg.setType("CONNECT");
@@ -75,57 +71,60 @@ public class Client {
             oos.flush(); // flush stream
 
             ois = new ObjectInputStream(socket.getInputStream());
-//            dis = new DataInputStream(socket.getInputStream());
-            System.out.println("here client");
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, serverAddress, serverUDPPort);
 
-            while (true) {
-                // asks for user input
-                System.out.println(printOptions());
+            System.out.println("Welcome to Auction House!");
 
-                // reads user input
-                String option = in.nextLine();
-                option = option.toUpperCase();
+            Thread menu = new Thread(() -> {
+                while (true) {
+                    try {
+                        // asks for user input
+                        System.out.println(printOptions());
 
-                // decides what to do based on user input
-                switch(option) {
-                    case MessageType.REGISTER:
-                        msg.setType(MessageType.OFFER);
-                        msg.setUser(registerForm());
+                        // reads user input
+                        String option = in.nextLine();
+                        option = option.toUpperCase();
 
-                        InetAddress address = packet.getAddress();
-                        int port = packet.getPort();
+                        // decides what to do based on user input
+                        switch (option) {
+                            case MessageType.REGISTER:
+                                msg.setType(MessageType.REGISTER);
+                                msg.setUser(registerForm());
+                                byte[] msgByte = Help.serialize(msg);
+                                packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
+                                udpSocket.send(packet);
 
-                        byte[] msgByte = Help.serialize(msg);
-                        packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, serverUDPPort);
-                        udpSocket.send(packet);
+                                packet = new DatagramPacket(buf, buf.length);
+                                udpSocket.receive(packet);
+                                msg = (Message) Help.deserialize(packet.getData());
+                                user = msg.getUser();
+                                System.out.println(msg + "\n");
+                                break;
+                            case MessageType.OFFER:
+                                msg.setItem(offer());
+                                msg.setType(MessageType.OFFER);
+                                oos.writeObject(msg);
+                                oos.flush();
 
-                        packet = new DatagramPacket(buf, buf.length);
-                        udpSocket.receive(packet);
-                        msg = (Message)Help.deserialize(packet.getData());
-
-                        System.out.println(msg + "\n");
-                        break;
-                    case MessageType.OFFER:
-                        msg.setItem(offer());
-                        msg.setType(MessageType.OFFER);
-                        oos.writeObject(msg);
-                        oos.flush();
-
-                        msg = (Message) ois.readObject();
-                        System.out.println(msg + "\n");
-                        System.out.println(msg.getItem().getStartTime());
-                        break;
-                    case "exit":
-                        System.out.println("Exiting the auction!");
-                        ois.close();
-                        oos.close();
-                        dis.close();
-                        dos.close();
-                        socket.close();
-                        break;
+                                msg = (Message) ois.readObject();
+                                System.out.println(msg + "\n");
+                                System.out.println(msg.getItem().getStartTime());
+                                break;
+                            case "exit":
+                                System.out.println("Exiting the auction!");
+                                ois.close();
+                                oos.close();
+                                socket.close();
+                                break;
+                        }
+                    } catch (IOException e) {
+                        System.out.println("Client menu IO exception!");
+                    } catch (ClassNotFoundException e) {
+                        System.out.println("Client packet receive not a message type!");
+                    }
                 }
-            }
+            });
+
+            menu.start();
         }
         catch (ConnectException e) {
             System.out.println("Unable to connect to server with tcp");
@@ -164,8 +163,7 @@ public class Client {
     
     private String printOptions() {
 
-        System.out.println("Welcome to Auction House!");
-        if (this.user.isAuth())
+        if (!this.user.isAuth())
         {
             return "Enter 'register' to get access to auction";
         } else {
