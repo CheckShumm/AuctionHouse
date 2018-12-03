@@ -12,7 +12,7 @@ public class Client {
     //gets configuration from config.properties file
     private Environment env = new Environment();
 
-    private User user;
+    public static User user;
 
     private Message msg = new Message();
     private Message inputMessage = new Message();
@@ -35,7 +35,10 @@ public class Client {
     //UDP buffer
     private byte[] buf = new byte[256];
 
-    private boolean isOn = true;
+    public static boolean isOn = true;
+
+    public static boolean isAuth = false;
+    public static boolean wait = false;
 
     public Client() {
 
@@ -71,72 +74,99 @@ public class Client {
             oos.flush(); // flush stream
             System.out.println("Welcome to Auction House!");
 
-            Listener listener = new Listener(socket, this);
+            Listener listener = new Listener(socket,this);
+            UDPListener udpListener = new UDPListener(udpSocket);
+
             listener.start();
             Thread menu = new Thread(() -> {
+
                 while (true) {
-                    try {
-                        // asks for user input
-                        System.out.println(printOptions());
+                    if(!Client.wait || true) {
+//                        System.out.println("client wait:" + Client.wait);
+                        try {
+                            Client.wait = true;
 
-                        // reads user input
-                        String option = in.nextLine();
-                        option = option.toUpperCase();
+                            // asks for user input
+                            System.out.println(printOptions());
 
-                        // decides what to do based on user input
-                        switch (option) {
-                            case MessageType.REGISTER:
-                                msg.setType(MessageType.REGISTER);
-                                msg.setUser(registerForm());
-                                byte[] msgByte = Help.serialize(msg);
-                                packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
-                                udpSocket.send(packet);
+                            // reads user input
+                            String option = in.nextLine();
+                            option = option.toUpperCase();
+                            byte[] msgByte;
 
-                                packet = new DatagramPacket(buf, buf.length);
-                                udpSocket.receive(packet);
-                                msg = (Message) Help.deserialize(packet.getData());
-                                user = msg.getUser();
-                                System.out.println(msg + "\n");
-                                break;
-                            case MessageType.OFFER:
-                                int offerCount = 0;
-                                while(!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
-                                    msg.setItem(offer());
-                                    msg.setType(MessageType.OFFER);
-                                    System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
+                            // decides what to do based on user input
+                            switch (option) {
+                                case MessageType.REGISTER:
+                                    msg.setType(MessageType.REGISTER);
+                                    msg.setUser(registerForm());
+
+                                    msgByte = Help.serialize(msg);
+                                    packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
+                                    udpSocket.send(packet);
+//                                    Client.wait = true;
+                                    Thread.sleep(1000);
+
+                                    break;
+                                case MessageType.LOGIN:
+                                    msg.setType(MessageType.LOGIN);
+                                    msg.setUser(registerForm());
+                                    msgByte = Help.serialize(msg);
+
+                                    packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
+                                    udpSocket.send(packet);
+//                                    Client.wait = true;
+                                    Thread.sleep(1000);
+
+                                    break;
+                                case MessageType.OFFER:
+                                    int offerCount = 0;
+                                    while(!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
+                                        msg.setItem(offer());
+                                        msg.setType(MessageType.OFFER);
+                                        System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
+                                        oos.writeUnshared(msg);
+                                        oos.flush();
+                                        offerCount++;
+                                        Thread.sleep(1000);
+                                    }
+                                    inputMessage.setType(MessageType.NULL);
+                                    break;
+                                case MessageType.BID:
+                                    msg.setType(MessageType.BID);
+                                    bid();
+                                    System.out.println("Bidding on " + msg.getItemName());
                                     oos.writeUnshared(msg);
                                     oos.flush();
-                                    offerCount++;
-                                    Thread.sleep(1000);
-                                }
-                                inputMessage.setType(MessageType.NULL);
-                                break;
-                            case MessageType.BID:
-                                msg.setType(MessageType.BID);
-                                bid();
-                                System.out.println("Bidding on " + msg.getItemName());
-                                oos.writeUnshared(msg);
-                                oos.flush();
-                                break;
-                            case "exit":
-                                System.out.println("Exiting the auction!");
-                                ois.close();
-                                oos.close();
-                                socket.close();
-                                break;
+                                    break;
+                                case "exit":
+                                    System.out.println("Exiting the auction!");
+
+//                                    msg.setType(MessageType.DEREGISTER);
+//                                    msgByte = Help.serialize(msg);
+//                                    packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
+//                                    udpSocket.send(packet);
+//                                    Client.wait = true;
+//                                    Thread.sleep(1000);
+
+                                    ois.close();
+                                    oos.close();
+                                    socket.close();
+                                    break;
+                            }
+//                            System.out.println("client wait:" + Client.wait);
+                        } catch (IOException e) {
+                            System.out.println("Client menu IO exception!");
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        System.out.println("Client menu IO exception!");
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        System.out.println("Client packet receive not a message type!");
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
                 }
             });
 
             menu.start();
+            listener.start();
+            udpListener.start();
         }
         catch (ConnectException e) {
             System.out.println("Unable to connect to server with tcp");
@@ -180,26 +210,39 @@ public class Client {
         System.out.println("Enter username");
         String username = in.nextLine();
 
+        System.out.println("Enter password");
+        String password = in.nextLine();
+
         User user = new User();
         user.setUsername(username);
+        user.setPassword(password);
         return user;
     }
     
     private String printOptions() {
 
-        if (!this.user.isAuth())
+        if (!user.isAuth())
         {
-            return "Enter 'register' to get access to auction";
+            return ("Enter 'register' to register an account\n"+
+                    "Enter 'login' to login to your account\n");
         } else {
             return ("Enter 'offer' to put an item up for auction\n"+
                     "Enter 'bid' if you would like to bid on an item\n"+
-                    "Enter 'exit' if you would like to exit");
+                    "Enter 'exit' if you would like to exit\n");
         }
 
     }
 
     public void setInputMessage(Message inputMessage) {
         this.inputMessage = inputMessage;
+    }
+
+//    public static void setAuthenticated(boolean isAuth) {
+//        isAuth = isAuth;
+//    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public static void main(String args[]) {

@@ -81,6 +81,7 @@ public class ClientHandler extends Thread{
         }
     }
 
+
     private void offerConfirm() throws IOException {
       // send offer confirmed MSG
         this.msg.setType(MessageType.OFFER_CONFIRM);

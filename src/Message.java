@@ -21,9 +21,11 @@ public class Message implements Serializable{
     private String reason;
     private double amount;
     private String itemName; // For Bidding
+    private static int count;
 
     public Message(){
         this.type = "default";
+        ++count;
     }
     
     public Item getItem() {
@@ -89,6 +91,7 @@ public class Message implements Serializable{
                 sb.append(user.getUsername() + " registration");
                 break;
             case MessageType.UNREGISTERED:
+                sb.append(count + " ");
                 sb.append(type + " ");
                 sb.append("Unable to register ");
                 sb.append(user.getUsername() + " ");
@@ -148,6 +151,7 @@ public class Message implements Serializable{
                         .append(item.getItemNumber() + " ")
                         .append(item.getName() + " ")
                         .append("no valid bids");
+                break;
             default:
                 break;
 
