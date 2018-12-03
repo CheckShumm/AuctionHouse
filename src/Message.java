@@ -134,8 +134,8 @@ public class Message implements Serializable{
                         .append(item.getName() + " ")
                         .append(item.getCurrentBid() + " ");
                 break;
-            case MessageType.BIG_OVER:
-                sb.append(MessageType.BIG_OVER + " ")
+            case MessageType.BID_OVER:
+                sb.append(MessageType.BID_OVER + " ")
                         .append(item.getItemNumber() + " ")
                         .append(item.getName() + " ")
                         .append(item.getCurrentBid());

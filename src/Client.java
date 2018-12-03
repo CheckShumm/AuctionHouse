@@ -77,7 +77,6 @@ public class Client {
             Listener listener = new Listener(socket,this);
             UDPListener udpListener = new UDPListener(udpSocket);
 
-            listener.start();
             Thread menu = new Thread(() -> {
 
                 while (true) {
@@ -155,7 +154,7 @@ public class Client {
                             }
 //                            System.out.println("client wait:" + Client.wait);
                         } catch (IOException e) {
-                            System.out.println("Client menu IO exception!");
+                            System.out.println("Unable to connect to server.");
                             e.printStackTrace();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
@@ -164,9 +163,9 @@ public class Client {
                 }
             });
 
-            menu.start();
             listener.start();
             udpListener.start();
+            menu.start();
         }
         catch (ConnectException e) {
             System.out.println("Unable to connect to server with tcp");

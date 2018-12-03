@@ -20,7 +20,7 @@ public class MessageType {
     public static final String BID = "BID";
     public static final String HIGHEST = "HIGHEST";
     public static final String WIN = "WIN";
-    public static final String BIG_OVER = "BID-OVER";
+    public static final String BID_OVER = "BID-OVER";
     public static final String SOLDTO = "SOLDTO";
     public static final String NOT_SOLD = "NOT-SOLD";
 
