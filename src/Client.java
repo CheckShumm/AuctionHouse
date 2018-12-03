@@ -119,7 +119,7 @@ public class Client {
                                     break;
                                 case MessageType.OFFER:
                                     int offerCount = 0;
-                                    while(!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
+                                    while (!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
                                         msg.setItem(offer());
                                         msg.setType(MessageType.OFFER);
                                         System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
@@ -133,32 +133,25 @@ public class Client {
                                 case MessageType.BID:
                                     msg.setType(MessageType.BID);
                                     bid();
-                                    System.out.println("Bidding on " + msg.getItemName());
+                                    System.out.println("Bidding on " + msg.getItemID());
                                     oos.writeUnshared(msg);
                                     oos.flush();
                                     break;
                                 case "exit":
                                     System.out.println("Exiting the auction!");
-
-//                                    msg.setType(MessageType.DEREGISTER);
-//                                    msgByte = Help.serialize(msg);
-//                                    packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
-//                                    udpSocket.send(packet);
-//                                    Client.wait = true;
-//                                    Thread.sleep(1000);
-
                                     ois.close();
                                     oos.close();
                                     socket.close();
                                     break;
                             }
-//                            System.out.println("client wait:" + Client.wait);
                         } catch (IOException e) {
-                            System.out.println("Unable to connect to server.");
-                            e.printStackTrace();
-                        } catch (InterruptedException e) {
+                            System.out.println("Client menu IO exception!");
                             e.printStackTrace();
                         }
+                         catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 }
             });
@@ -194,9 +187,9 @@ public class Client {
 
     private void bid() {
         Scanner in = new Scanner(System.in);
-        System.out.println("What item would you like to bid on?");
-        String itemName = in.nextLine();
-        msg.setItemName(itemName);
+        System.out.println("Enter the id of the item you would like to bid on");
+        int itemID = in.nextInt();
+        msg.setItemID(itemID);
 
         System.out.println("How much would you like to offer?");
         double amount = in.nextDouble();
