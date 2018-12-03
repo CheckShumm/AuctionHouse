@@ -16,6 +16,7 @@ public class AuctionTimer extends Thread{
             @Override
             public void run() {
              elapsedTime++;
+
              for (Item item : ItemHandler.getInstance().getArray()) {
                  if(!item.getSold()){
                      if((elapsedTime - item.getStartTime()) > timeOut ){
@@ -42,7 +43,7 @@ public class AuctionTimer extends Thread{
 
     private void handleItem(Item item) {
         item.setSold(true);
-        notifyBidders(item, MessageType.BIG_OVER);
+        notifyBidders(item, MessageType.BID_OVER);
 
         if( item.getCurrentBid() == 0) {
             notifyBidders(item, MessageType.NOT_SOLD);
@@ -52,7 +53,6 @@ public class AuctionTimer extends Thread{
             // notify users
             notifyBidders(item, MessageType.SOLDTO);
         }
-
     }
 
     private void notifyBidders(Item item, String type) {
@@ -81,6 +81,4 @@ public class AuctionTimer extends Thread{
             }
         }
     }
-
-
 }

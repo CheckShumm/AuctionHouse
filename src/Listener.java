@@ -18,17 +18,18 @@ public class Listener extends Thread{
 
     @Override
     public void run() {
-        try {
-            while(true) {
+        while(true) {
+            try {
                 this.message = (Message) ois.readObject();
                 System.out.println(message);
                 client.setInputMessage(this.message);
+            } catch (IOException | ClassNotFoundException e) {
+//                try {
+//                    ois.close();
+//                } catch (IOException e1) {
+//                    e1.printStackTrace();
+//                }
             }
-
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
         }
-
     }
-
 }

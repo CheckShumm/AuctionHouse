@@ -4,6 +4,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.sql.SQLException;
 
 public class UDPHandler extends Thread{
 
@@ -16,8 +17,17 @@ public class UDPHandler extends Thread{
 
     private User user;
 
+    Auth auth;
 
     public UDPHandler(DatagramSocket socket, DatagramPacket packet) throws IOException {
+
+        try {
+            auth = new Auth();
+        } catch (SQLException e) {
+            System.out.println("Unable to connect to database");
+            e.printStackTrace();
+        }
+
         this.socket = socket;
         this.packet = packet;
 
@@ -28,6 +38,7 @@ public class UDPHandler extends Thread{
         try {
             incomingMsg = (Message) Help.deserialize(packet.getData());
             user = incomingMsg.getUser();
+            auth.setUser(user);
         } catch (ClassNotFoundException e) {
             System.out.println("UDP packet receive is not an message type");
         }
@@ -36,71 +47,50 @@ public class UDPHandler extends Thread{
     @Override
     public void run() {
         try {
-            while (true) {
-                switch(incomingMsg.getType()) {
-                    case MessageType.REGISTER:
+            //prep reply message
+            Message reply = new Message();
+            byte[] replyByte;
+            switch(incomingMsg.getType()) {
+                case MessageType.REGISTER:
 
-                        //give user authentication
-                        user.setAuth(true);
-
-                        //prep reply message
-                        Message reply = new Message();
-                        reply.setUser(user);
+                    if (auth.register()) {
                         reply.setType(MessageType.REGISTERED);
-                        byte[] replyByte = Help.serialize(reply);
-                        packet = new DatagramPacket(replyByte, replyByte.length, address, port);
+                    } else {
+                        reply.setType(MessageType.UNREGISTERED);
+                        reply.setReason("Your username is taken");
+                    }
 
-                        //send reply message
-                        socket.send(packet);
-                        break;
-                    default:
-                        break;
-                }
+                    break;
+                case MessageType.LOGIN:
+
+                    if (auth.login()) {
+                        reply.setType(MessageType.REGISTERED);
+                    } else {
+                        reply.setType(MessageType.UNREGISTERED);
+                        reply.setReason("Your username or password is incorrect");
+                    }
+
+                    break;
+                case MessageType.DEREGISTER:
+
+                    if (auth.login()) {
+                        reply.setType(MessageType.DEREG_CONF);
+                    }
+                    break;
+                default:
+                    reply.setType(MessageType.NULL);
+                    break;
             }
+
+            user = auth.getUser();
+            reply.setUser(auth.getUser());
+            replyByte = Help.serialize(reply);
+            packet = new DatagramPacket(replyByte, replyByte.length, address, port);
+
+            //send reply message
+            socket.send(packet);
         } catch (Exception e) {
-//            try {
-//                socket.close();
-//            } catch (IOException e1) {
-//                e1.printStackTrace();
-//            }
+            e.printStackTrace();
         }
     }
-//
-//    private void offer() throws IOException, ClassNotFoundException {
-//        item = msg.getItem();
-//        System.out.println(msg);
-//
-//    }
-//
-//    private void offerConfirm() throws IOException {
-//      // send offer confirmed MSG
-//        this.msg.setType("OFFER-CONF");
-//        msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
-//        oos.writeObject(msg);
-//        oos.flush();
-//        //notifyUsers();
-//    }
-//
-//    private void notifyUsers() {
-//        System.out.println("HERE!");
-//        for(int i = 0; i < ClientHandlers.getInstance().getArray().size(); i++) {
-//            UDPHandler handler = ClientHandlers.getInstance().getArray().get(i);
-//            try {
-//                oos.writeObject(msg);
-//                oos.flush();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-//
-//    private void offerDenied(String err) throws IOException {
-//       // send offer denied MSG
-//        this.msg.setType("OFFER-DENIED");
-//        this.msg.setReason(err);
-//        oos.writeObject(msg);
-//        oos.flush();
-//    }
-
-
 }
