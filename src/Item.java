@@ -9,6 +9,7 @@ public class Item implements Serializable {
     private String description;
     private double minPrice;
     private double currentBid;
+    private User topBidder;
     private Boolean sold;
     private int startTime;
     private ArrayList<User> bidders = new ArrayList();
@@ -20,7 +21,7 @@ public class Item implements Serializable {
         this.description = description;
         this.minPrice = minPrice;
         this.sold = false;
-        this.currentBid = minPrice;
+        this.currentBid = 0;
     }
 
     @Override
@@ -34,6 +35,14 @@ public class Item implements Serializable {
         System.out.println("Description: "  + this.description);
     }
 
+
+    public void addBidder(User user) {
+        if(!bidders.contains(user)) {
+            bidders.add(user);
+        }
+    }
+
+    // GETTERS AMD SETTERS
 
     public String getName() {
         return name;
@@ -105,5 +114,13 @@ public class Item implements Serializable {
 
     public void setCurrentBid(double currentBid) {
         this.currentBid = currentBid;
+    }
+
+    public User getTopBidder() {
+        return topBidder;
+    }
+
+    public void setTopBidder(User topBidder) {
+        this.topBidder = topBidder;
     }
 }

@@ -124,6 +124,30 @@ public class Message implements Serializable{
                         .append("#" + item.getItemNumber() + " ")
                         .append(item.getName() + " ")
                         .append(item.getCurrentBid());
+                break;
+            case MessageType.WIN:
+                sb.append(MessageType.WIN + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid() + " ");
+                break;
+            case MessageType.BIG_OVER:
+                sb.append(MessageType.BIG_OVER + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid());
+                break;
+            case MessageType.SOLDTO:
+                sb.append(MessageType.SOLDTO + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid());
+                break;
+            case MessageType.NOT_SOLD:
+                sb.append(MessageType.NOT_SOLD + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append("no valid bids");
             default:
                 break;
 

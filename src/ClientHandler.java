@@ -70,8 +70,10 @@ public class ClientHandler extends Thread{
             if(item.getName().equals(msg.getItemName())) {
                 this.msg.setItem(item);
                 System.out.println(msg);
-                if(msg.getAmount() > item.getCurrentBid()) {
+                if(msg.getAmount() > item.getCurrentBid() && msg.getAmount() >= item.getMinPrice()) {
                     this.msg.getItem().setCurrentBid(msg.getAmount());
+                    this.msg.getItem().setTopBidder(this.user);
+                    this.msg.getItem().addBidder(this.user);
                     this.msg.setType(MessageType.HIGHEST);
                     notifyUsers();
                 }
@@ -113,7 +115,7 @@ public class ClientHandler extends Thread{
 
     public void sendMessage() throws IOException {
         this.oos.writeUnshared(this.msg);
-        System.out.println("Sending this msg: " + msg);
+        //System.out.println("Sending this msg: " + msg);
         this.oos.flush();
     }
 
@@ -127,5 +129,13 @@ public class ClientHandler extends Thread{
 
     public void setMsg(Message msg) {
         this.msg = msg;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
