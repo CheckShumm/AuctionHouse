@@ -1,19 +1,19 @@
 import java.util.ArrayList;
 
-public class ItemHandlers  {
+public class ItemHandler  {
 
-    private static ItemHandlers mInstance;
+    private static ItemHandler mInstance;
     private ArrayList<Item> list = null;
     private int itemCount;
 
-    public static ItemHandlers getInstance() {
+    public static ItemHandler getInstance() {
         if(mInstance == null)
-            mInstance = new ItemHandlers();
+            mInstance = new ItemHandler();
 
         return mInstance;
     }
 
-    private ItemHandlers() {
+    private ItemHandler() {
         this.itemCount = 0;
         this.list = new ArrayList<Item>();
     }

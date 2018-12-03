@@ -17,7 +17,7 @@ public class Server {
 
     private ClientHandlers clientHandlers;
     private UDPHandlers udpHandlers;
-    private ItemHandlers itemHandlers;
+    private ItemHandler itemHandlers;
 
     private  ServerSocket ss;
     private  Socket socket = null;
@@ -42,7 +42,7 @@ public class Server {
 
         clientHandlers = ClientHandlers.getInstance();
         udpHandlers = UDPHandlers.getInstance();
-        itemHandlers = ItemHandlers.getInstance();
+        itemHandlers = ItemHandler.getInstance();
 
 
         auctionTimer = new AuctionTimer();

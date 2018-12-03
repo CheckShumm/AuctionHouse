@@ -114,7 +114,7 @@ public class Client {
                             case MessageType.BID:
                                 msg.setType(MessageType.BID);
                                 bid();
-                                System.out.println("Bidding on " + msg.getItemName());
+                                System.out.println("Bidding on " + msg.getItemID());
                                 oos.writeUnshared(msg);
                                 oos.flush();
                                 break;
@@ -165,9 +165,9 @@ public class Client {
 
     private void bid() {
         Scanner in = new Scanner(System.in);
-        System.out.println("What item would you like to bid on?");
-        String itemName = in.nextLine();
-        msg.setItemName(itemName);
+        System.out.println("Enter the id of the item you would like to bid on");
+        int itemID = in.nextInt();
+        msg.setItemID(itemID);
 
         System.out.println("How much would you like to offer?");
         double amount = in.nextDouble();
