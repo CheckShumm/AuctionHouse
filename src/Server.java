@@ -1,72 +1,98 @@
 /*
-Client Class
+    Server processes UDP and TCP depending on the message type.
  */
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Scanner;
 
-@SuppressWarnings("ALL")
 public class Server {
 
-    private static int  tcpPort = 3333;
+    //gets configuration from config.properties file
+    private Environment env = new Environment();
 
-    private  ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+    InetAddress serverAddress;
+
+    private int serverUDPPort;
+    private int serverTCPPort;
+
+    private ClientHandlers clientHandlers;
+    private UDPHandlers udpHandlers;
+
     private  ServerSocket ss;
     private  Socket socket = null;
     private  Boolean isRunning = true;
+    public  static AuctionTimer auctionTimer;
+
+    //UDP
+    DatagramSocket udpSocket;
+    private byte[] buf = new byte[256];
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
         new Server();
     }
 
     public Server() throws IOException {
-        ss = new ServerSocket(tcpPort);
+
+        serverUDPPort = Integer.parseInt(env.get("SERVER_PORT_UDP", "3332"));
+        serverTCPPort = Integer.parseInt(env.get("SERVER_PORT_TCP", "3333"));
+
+        udpSocket = new DatagramSocket(serverUDPPort, serverAddress);
+        ss = new ServerSocket(serverTCPPort);
+
+        clientHandlers = ClientHandlers.getInstance();
+        udpHandlers = UDPHandlers.getInstance();
+
+        auctionTimer = new AuctionTimer();
+        auctionTimer.run();
+
         System.out.println("Server is running");
-            while(isRunning)
-                try {
-                socket = ss.accept();
-                ClientHandler clientHandler = new ClientHandler(socket,this);
-                clientHandler.start();
-                clientHandlers.add(clientHandler);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-    }
 
-    public void udpServer() {
-        DatagramSocket socket;
-        int clientPort = 6788;
+        try {
+            Thread tcpSockets = new Thread () {
+                public void run () {
+                    try {
+                        while(true)
+                        {
+                            socket = ss.accept();
+                            ClientHandler clientHandler = new ClientHandler(socket);
+                            clientHandlers.add(clientHandler);
+                            clientHandler.start();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            Thread udpSockets = new Thread () {
+                public void run () {
+                    try {
+                        while(true)
+                        {
+                            //Receive UDP Packet
+                            DatagramPacket packet
+                                    = new DatagramPacket(buf, buf.length);
+                            udpSocket.receive(packet);
 
-        try{
-            socket = new DatagramSocket(clientPort);
-            byte[] data = new byte[1000];
+                            //Output packet
+                            Message incomingMsg = (Message) Help.deserialize(packet.getData());
+                            System.out.println(incomingMsg);
 
-            System.out.println("Server Running...");
-
-            while(true) {
-                DatagramPacket request = new DatagramPacket(data, data.length);
-
-                socket.receive(request);
-                String [] arrayMsg = (new String(request.getData())).split(" ");
-
-                byte[] replyMsg = ("Server Received at index 0: " + arrayMsg[0]).getBytes();
-                InetAddress address = request.getAddress();
-                int port = request.getPort();
-                DatagramPacket reply = new DatagramPacket(replyMsg, replyMsg.length, address, port);
-                socket.send(reply);
-
-            }
-        } catch (IOException e) {
+                            UDPHandler udpHandler = new UDPHandler(udpSocket, packet);
+                            udpHandlers.add(udpHandler);
+                            udpHandler.start();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            udpSockets.start();
+            tcpSockets.start();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public  ArrayList<ClientHandler> getClientHandlers() {
-        return clientHandlers;
     }
 
 }

@@ -11,16 +11,19 @@ import java.io.Serializable;
  *
  * @author n_shumm
  */
+
+
 public class Message implements Serializable{
     
     private Item item;
     private String type;
     private User user;
     private String reason;
-
+    private static int count;
 
     public Message(){
         this.type = "default";
+        ++count;
     }
     
     public Item getItem() {
@@ -59,19 +62,44 @@ public class Message implements Serializable{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         switch(type) {
-            case "OFFER":
+            case MessageType.REGISTER:
+                sb.append(type).append(" ")
+                .append("Attempt to register ")
+                .append(user.getUsername());
+                break;
+            case MessageType.REGISTERED:
+                sb.append(type + " ");
+                sb.append("Confirm ");;
+                sb.append(user.getUsername() + " registration");
+                break;
+            case MessageType.UNREGISTERED:
+                sb.append(count + " ");
+                sb.append(type + " ");
+                sb.append("Unable to register ");
+                sb.append(user.getUsername() + " ");
+                sb.append("due to " + this.reason );
+                break;
+            case MessageType.OFFER:
                 sb.append(type + " ");
                 sb.append('1' + " "); // user.getRequestCount();
                 sb.append(item.getName() + " ");
                 sb.append(item.getDescription() + " ");
                 sb.append(item.getMinPrice());
                 break;
-            case "OFFER-CONF":
+            case MessageType.OFFER_CONFIRM:
                 sb.append(type + " 1 " + item.getName() + " " + item.getDescription() + " " + item.getMinPrice());
                 break;
-            case "OFFER-DENIED":
+            case MessageType.OFFER_DENIED:
                 sb.append(type + " 1 " + this.reason);
+            case MessageType.NEW:
+                sb.append(type + " ");
+                sb.append("item number ");
+                sb.append(item.getDescription() + " ");
+                sb.append(item.getMinPrice() + " ");
+                break;
             default:
+//                sb.append(type + " ");
+//                sb.append("Message Type is null ");
                 break;
 
         }
