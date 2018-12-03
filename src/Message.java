@@ -19,6 +19,8 @@ public class Message implements Serializable{
     private String type;
     private User user;
     private String reason;
+    private double amount;
+    private String itemName; // For Bidding
 
     public Message(){
         this.type = "default";
@@ -56,14 +58,30 @@ public class Message implements Serializable{
         this.reason = reason;
     }
 
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         switch(type) {
             case MessageType.REGISTER:
-                sb.append(type + " ");
-                sb.append("Attempt to register ");
-                sb.append(user.getUsername());
+                sb.append(type).append(" ")
+                .append("Attempt to register ")
+                .append(user.getUsername());
                 break;
             case MessageType.REGISTERED:
                 sb.append(type + " ");
@@ -88,6 +106,48 @@ public class Message implements Serializable{
                 break;
             case MessageType.OFFER_DENIED:
                 sb.append(type + " 1 " + this.reason);
+            case MessageType.NEW:
+                sb.append(type + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getDescription() + " ")
+                        .append(item.getMinPrice() + " ");
+                break;
+            case MessageType.BID:
+                sb.append(MessageType.BID + " ")
+                        .append("Request Count ")
+                        .append(item.getItemNumber() + " ")
+                        .append(this.amount);
+                break;
+            case MessageType.HIGHEST:
+                sb.append(MessageType.HIGHEST + " ")
+                        .append("#" + item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid());
+                break;
+            case MessageType.WIN:
+                sb.append(MessageType.WIN + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid() + " ");
+                break;
+            case MessageType.BIG_OVER:
+                sb.append(MessageType.BIG_OVER + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid());
+                break;
+            case MessageType.SOLDTO:
+                sb.append(MessageType.SOLDTO + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append(item.getCurrentBid());
+                break;
+            case MessageType.NOT_SOLD:
+                sb.append(MessageType.NOT_SOLD + " ")
+                        .append(item.getItemNumber() + " ")
+                        .append(item.getName() + " ")
+                        .append("no valid bids");
             default:
                 break;
 

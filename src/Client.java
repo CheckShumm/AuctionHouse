@@ -13,10 +13,13 @@ public class Client {
     private Environment env = new Environment();
 
     private User user;
+
     private Message msg = new Message();
-    
+    private Message inputMessage = new Message();
+
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
+    private ObjectInputStream globalInputStream;
 
     InetAddress serverAddress;
     InetAddress clientAddress;
@@ -51,14 +54,12 @@ public class Client {
             System.out.println("Server is not found");
             e.printStackTrace();
         }
-
     }
 
     private void load() {
 
         try {
             Scanner in = new Scanner(System.in);
-            System.out.println("Client IP: " + clientAddress);
 
             DatagramSocket udpSocket = new DatagramSocket();
             Socket socket = new Socket(serverAddress, clientTCPPort);
@@ -67,13 +68,11 @@ public class Client {
 
             // let server know client is connected
             msg.setType("CONNECT");
-            // oos.writeObject(msg);
             oos.flush(); // flush stream
-
-            ois = new ObjectInputStream(socket.getInputStream());
-
             System.out.println("Welcome to Auction House!");
 
+            Listener listener = new Listener(socket, this);
+            listener.start();
             Thread menu = new Thread(() -> {
                 while (true) {
                     try {
@@ -100,14 +99,24 @@ public class Client {
                                 System.out.println(msg + "\n");
                                 break;
                             case MessageType.OFFER:
-                                msg.setItem(offer());
-                                msg.setType(MessageType.OFFER);
-                                oos.writeObject(msg);
+                                int offerCount = 0;
+                                while(!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
+                                    msg.setItem(offer());
+                                    msg.setType(MessageType.OFFER);
+                                    System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
+                                    oos.writeUnshared(msg);
+                                    oos.flush();
+                                    offerCount++;
+                                    Thread.sleep(1000);
+                                }
+                                inputMessage.setType(MessageType.NULL);
+                                break;
+                            case MessageType.BID:
+                                msg.setType(MessageType.BID);
+                                bid();
+                                System.out.println("Bidding on " + msg.getItemName());
+                                oos.writeUnshared(msg);
                                 oos.flush();
-
-                                msg = (Message) ois.readObject();
-                                System.out.println(msg + "\n");
-                                System.out.println(msg.getItem().getStartTime());
                                 break;
                             case "exit":
                                 System.out.println("Exiting the auction!");
@@ -118,8 +127,11 @@ public class Client {
                         }
                     } catch (IOException e) {
                         System.out.println("Client menu IO exception!");
+                        e.printStackTrace();
                     } catch (ClassNotFoundException e) {
                         System.out.println("Client packet receive not a message type!");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             });
@@ -137,18 +149,30 @@ public class Client {
 
     private Item offer() {
         Scanner in = new Scanner(System.in);
-        System.out.println("Enter name of the item?");
+        System.out.println("What is the name of your item?");
         String itemName = in.nextLine();
 
         System.out.println("Please give a short description of your item.");
         String itemDescription = in.nextLine();
 
-        System.out.println("What is the starting bid for " + itemName);
+        System.out.println("What is the starting price for " + itemName);
         double minPrice = in.nextDouble();
 
         Item item = new Item(itemName, user, itemDescription, minPrice);
 
         return item;
+    }
+
+    private void bid() {
+        Scanner in = new Scanner(System.in);
+        System.out.println("What item would you like to bid on?");
+        String itemName = in.nextLine();
+        msg.setItemName(itemName);
+
+        System.out.println("How much would you like to offer?");
+        double amount = in.nextDouble();
+        msg.setAmount(amount);
+
     }
 
     private User registerForm() {
@@ -172,6 +196,10 @@ public class Client {
                     "Enter 'exit' if you would like to exit");
         }
 
+    }
+
+    public void setInputMessage(Message inputMessage) {
+        this.inputMessage = inputMessage;
     }
 
     public static void main(String args[]) {

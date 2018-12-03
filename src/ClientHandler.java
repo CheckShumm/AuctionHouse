@@ -11,9 +11,7 @@ public class ClientHandler extends Thread{
     private Socket socket = null;
     private Item item;
 
-    private DataInputStream dis;
-    private DataOutputStream dos;
-    private ObjectOutputStream oos;
+    public ObjectOutputStream oos;
     private ObjectInputStream ois;
 
     private User user;
@@ -28,10 +26,7 @@ public class ClientHandler extends Thread{
     public void run() {
         try {
             this.oos = new ObjectOutputStream(socket.getOutputStream());
-            this.dos = new DataOutputStream(socket.getOutputStream());
-
             this.ois = new ObjectInputStream(socket.getInputStream());
-            this.dis = new DataInputStream(socket.getInputStream());
 
             while (true) {
                 this.msg = (Message)ois.readObject();
@@ -45,6 +40,7 @@ public class ClientHandler extends Thread{
                         }
                         break;
                     case "BID":
+                        bid();
                         break;
                     case "EXIT":
                         break;
@@ -67,27 +63,44 @@ public class ClientHandler extends Thread{
     private void offer() throws IOException, ClassNotFoundException {
         item = msg.getItem();
         System.out.println(msg);
+    }
 
+    private void bid() {
+        for ( Item item : ItemHandlers.getInstance().getArray()) {
+            if(item.getName().equals(msg.getItemName())) {
+                this.msg.setItem(item);
+                System.out.println(msg);
+                if(msg.getAmount() > item.getCurrentBid() && msg.getAmount() >= item.getMinPrice()) {
+                    this.msg.getItem().setCurrentBid(msg.getAmount());
+                    this.msg.getItem().setTopBidder(this.user);
+                    this.msg.getItem().addBidder(this.user);
+                    this.msg.setType(MessageType.HIGHEST);
+                    notifyUsers();
+                }
+            }
+        }
     }
 
     private void offerConfirm() throws IOException {
       // send offer confirmed MSG
-        this.msg.setType("OFFER-CONF");
+        this.msg.setType(MessageType.OFFER_CONFIRM);
         msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
-        oos.writeObject(msg);
+        ItemHandlers.getInstance().add(item);
+        oos.writeUnshared(msg);
         oos.flush();
-        //notifyUsers();
+        msg.setType(MessageType.NEW);
+        notifyUsers();
     }
 
     private void notifyUsers() {
-        System.out.println("HERE!");
-        for(int i = 0; i < ClientHandlers.getInstance().getArray().size(); i++) {
-            ClientHandler handler = ClientHandlers.getInstance().getArray().get(i);
-            try {
-                oos.writeObject(msg);
-                oos.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
+        for(ClientHandler handler : ClientHandlers.getInstance().getArray()) {
+            if(handler != this) {
+                try {
+                    handler.setMsg(this.msg);
+                    handler.sendMessage();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -96,9 +109,33 @@ public class ClientHandler extends Thread{
        // send offer denied MSG
         this.msg.setType("OFFER-DENIED");
         this.msg.setReason(err);
-        oos.writeObject(msg);
+        oos.writeUnshared(msg);
         oos.flush();
     }
 
+    public void sendMessage() throws IOException {
+        this.oos.writeUnshared(this.msg);
+        //System.out.println("Sending this msg: " + msg);
+        this.oos.flush();
+    }
 
+    public ObjectOutputStream getOos() {
+        return oos;
+    }
+
+    public Message getMsg() {
+        return msg;
+    }
+
+    public void setMsg(Message msg) {
+        this.msg = msg;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
