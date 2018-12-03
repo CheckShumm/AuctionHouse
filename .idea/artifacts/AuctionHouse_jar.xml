@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="AuctionHouse:jar">
+    <output-path>$PROJECT_DIR$/out</output-path>
+    <root id="archive" name="AuctionHouse.jar">
+      <element id="module-output" name="AuctionHouse" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/mysql-connector-java-5.1.47/mysql-connector-java-5.1.47.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/sqlite-jdbc-3.23.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

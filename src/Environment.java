@@ -5,10 +5,15 @@ import java.util.Properties;
 
 public class Environment {
 
-    private static final String filename = "config.properties";
+    private static String filename = "config.properties";
     private Properties prop = new Properties();
 
     public Environment() {
+        load();
+    }
+
+    public Environment(String path) {
+        this.filename = path;
         load();
     }
 
@@ -18,7 +23,7 @@ public class Environment {
 
         try {
 
-            String filename = "config.properties";
+//            String filename = "config.properties";
             envFile = new FileInputStream(filename);
 
             if(envFile==null){

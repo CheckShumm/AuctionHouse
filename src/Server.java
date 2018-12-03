@@ -30,10 +30,11 @@ public class Server {
     private byte[] buf = new byte[256];
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
-        new Server();
+        new Server(args[0]);
     }
 
-    public Server() throws IOException {
+    public Server(String propertiesFilePath) throws IOException {
+        env = new Environment(propertiesFilePath);
 
         serverUDPPort = Integer.parseInt(env.get("SERVER_PORT_UDP", "3332"));
         serverTCPPort = Integer.parseInt(env.get("SERVER_PORT_TCP", "3333"));

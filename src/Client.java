@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 public class Client {
 
     //gets configuration from config.properties file
-    private Environment env = new Environment();
+    private Environment env;
 
     public static User user;
 
@@ -40,7 +40,8 @@ public class Client {
     public static boolean isAuth = false;
     public static boolean wait = false;
 
-    public Client() {
+    public Client(String propertiesFilePath) {
+            env = new Environment(propertiesFilePath);
 
         try {
             //set client configuration
@@ -238,7 +239,7 @@ public class Client {
     }
 
     public static void main(String args[]) {
-        Client client = new Client();
+        Client client = new Client(args[0]);
     }
     
    
