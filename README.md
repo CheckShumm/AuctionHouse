@@ -10,8 +10,21 @@ Importing project with Intellij
 Database
 
 Require
+
 server: https://dev.mysql.com/downloads/mysql/
-download connector: https://dev.mysql.com/downloads/connector/j/5.1.html
+Install server
+
+import database schema in Dump
+from intellij database console
+
+1. CREATE DATABASE auctionhouse
+
+2. USE auctionhouse
+
+3. paste the content of the dump
+
+
+download connector for jar: https://dev.mysql.com/downloads/connector/j/5.1.html
 
 file: mysql-connector-java-5.1.47.jar
 
