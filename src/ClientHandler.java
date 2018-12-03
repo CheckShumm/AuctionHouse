@@ -66,8 +66,8 @@ public class ClientHandler extends Thread{
     }
 
     private void bid() {
-        for ( Item item : ItemHandlers.getInstance().getArray()) {
-            if(item.getName().equals(msg.getItemName())) {
+        for ( Item item : ItemHandler.getInstance().getArray()) {
+            if(item.getItemNumber() == msg.getItemID()) {
                 this.msg.setItem(item);
                 System.out.println(msg);
                 if(msg.getAmount() > item.getCurrentBid() && msg.getAmount() >= item.getMinPrice()) {
@@ -85,7 +85,7 @@ public class ClientHandler extends Thread{
       // send offer confirmed MSG
         this.msg.setType(MessageType.OFFER_CONFIRM);
         msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
-        ItemHandlers.getInstance().add(item);
+        ItemHandler.getInstance().add(item);
         oos.writeUnshared(msg);
         oos.flush();
         msg.setType(MessageType.NEW);

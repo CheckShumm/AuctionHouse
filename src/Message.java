@@ -20,7 +20,7 @@ public class Message implements Serializable{
     private User user;
     private String reason;
     private double amount;
-    private String itemName; // For Bidding
+    private int itemID; // For Bidding
 
     public Message(){
         this.type = "default";
@@ -66,12 +66,12 @@ public class Message implements Serializable{
         this.amount = amount;
     }
 
-    public String getItemName() {
-        return itemName;
+    public int getItemID() {
+        return itemID;
     }
 
-    public void setItemName(String itemName) {
-        this.itemName = itemName;
+    public void setItemID(int itemID) {
+        this.itemID = itemID;
     }
 
     @Override
@@ -123,7 +123,7 @@ public class Message implements Serializable{
                 sb.append(MessageType.HIGHEST + " ")
                         .append("#" + item.getItemNumber() + " ")
                         .append(item.getName() + " ")
-                        .append(item.getCurrentBid());
+                        .append(amount);
                 break;
             case MessageType.WIN:
                 sb.append(MessageType.WIN + " ")
