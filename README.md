@@ -10,6 +10,7 @@ Importing project with Intellij
 Database
 
 Require
+server: https://dev.mysql.com/downloads/mysql/
 download connector: https://dev.mysql.com/downloads/connector/j/5.1.html
 
 file: mysql-connector-java-5.1.47.jar
