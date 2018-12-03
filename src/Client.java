@@ -140,6 +140,7 @@ public class Client {
                                     break;
                                 case "exit":
                                     System.out.println("Exiting the auction!");
+                                    msg.setType(MessageType.DEREGISTER);
                                     ois.close();
                                     oos.close();
                                     socket.close();
