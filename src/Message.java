@@ -97,6 +97,20 @@ public class Message implements Serializable{
                 sb.append(user.getUsername() + " ");
                 sb.append("due to " + this.reason );
                 break;
+            case MessageType.DEREGISTER:
+                sb.append(type + " ");
+                sb.append(user.getRequestCount());
+                sb.append(user.getUsername() + " ");
+                break;
+            case MessageType.DEREG_CONF:
+                sb.append(type + " ");
+                sb.append(user.getRequestCount());
+                break;
+            case MessageType.DEREG_DENIED:
+                sb.append(type + " ");
+                sb.append(user.getRequestCount() + " ");
+                sb.append("due to " + this.reason );
+                break;
             case MessageType.OFFER:
                 sb.append(type + " ");
                 sb.append('1' + " "); // user.getRequestCount();
@@ -118,7 +132,7 @@ public class Message implements Serializable{
                 break;
             case MessageType.BID:
                 sb.append(MessageType.BID + " ")
-                        .append("Request Count ")
+                        .append(user.getRequestCount())
                         .append(item.getItemNumber() + " ")
                         .append(this.amount);
                 break;
