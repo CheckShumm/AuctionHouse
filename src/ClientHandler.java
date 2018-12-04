@@ -1,102 +1,143 @@
-/*
-    Server processes UDP and TCP depending on the message type.
- */
+import java.io.*;
+import java.net.DatagramSocket;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import java.io.IOException;
-import java.net.*;
+public class ClientHandler extends Thread{
 
-public class Server {
-
-    //gets configuration from config.properties file
-    private Environment env = new Environment();
-
-    InetAddress serverAddress;
-
-    private int serverUDPPort;
-    private int serverTCPPort;
-
-    private ClientHandlers clientHandlers;
-    private UDPHandlers udpHandlers;
-
-    private ItemHandler itemHandlers;
-
-    private ServerSocket ss;
+    // TCP
     private Socket socket = null;
-    private Boolean isRunning = true;
-    public static AuctionTimer auctionTimer;
+    private Item item;
 
-    //UDP
-    DatagramSocket udpSocket;
-    private byte[] buf = new byte[256];
+    public ObjectOutputStream oos;
+    private ObjectInputStream ois;
 
-    public static void main(String args[]) throws IOException, ClassNotFoundException {
-        new Server(args[0]);
+    private User user;
+    private Message msg;
+
+    public ClientHandler(Socket socket) throws IOException {
+        this.socket = socket;
+        this.user = new User();
     }
 
-    public Server(String propertiesFilePath) throws IOException {
-        env = new Environment(propertiesFilePath);
-
-        serverUDPPort = Integer.parseInt(env.get("SERVER_PORT_UDP", "3332"));
-        serverTCPPort = Integer.parseInt(env.get("SERVER_PORT_TCP", "3333"));
-
-        udpSocket = new DatagramSocket(serverUDPPort, serverAddress);
-        ss = new ServerSocket(serverTCPPort);
-
-        clientHandlers = ClientHandlers.getInstance();
-        udpHandlers = UDPHandlers.getInstance();
-        itemHandlers = ItemHandler.getInstance();
-
-        auctionTimer = new AuctionTimer();
-        auctionTimer.run();
-
-        System.out.println("Server is running");
-
+    @Override
+    public void run() {
         try {
-            Thread tcpSockets = new Thread () {
-                public void run () {
-                    try {
-                        while(true)
-                        {
-                            socket = ss.accept();
-                            ClientHandler clientHandler = new ClientHandler(socket);
-                            clientHandlers.add(clientHandler);
-                            clientHandler.start();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-            Thread udpSockets = new Thread () {
-                public void run () {
-                    try {
-                        while(true)
-                        {
-                            //Receive UDP Packet
-                            DatagramPacket packet
-                                    = new DatagramPacket(buf, buf.length);
-                            udpSocket.receive(packet);
+            this.oos = new ObjectOutputStream(socket.getOutputStream());
+            this.ois = new ObjectInputStream(socket.getInputStream());
 
-                            //Output packet
-                            Message incomingMsg = (Message) Help.deserialize(packet.getData());
-                            System.out.println(incomingMsg);
-
-                            UDPHandler udpHandler = new UDPHandler(udpSocket, packet);
-                            udpHandlers.add(udpHandler);
-                            udpHandler.start();
+            while (true) {
+                this.msg = (Message)ois.readObject();
+                switch(msg.getType()) {
+                    case "OFFER":
+                        offer();
+                        if (item.getMinPrice() < 0 ) {
+                            offerDenied("price not valid ");
+                        } else {
+                            offerConfirm();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                        break;
+                    case "BID":
+                        bid();
+                        break;
+                    case "EXIT":
+                        break;
+                    case "CONNECT":
+                        this.user = msg.getUser();
+                        System.out.println("Client has connected");
+                        break;
+                    default:
+                        break;
                 }
-            };
-            udpSockets.start();
-            tcpSockets.start();
-        } catch (Exception e) {
-            e.printStackTrace();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            try {
+                socket.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
+    private void offer() throws IOException, ClassNotFoundException {
+        item = msg.getItem();
+        System.out.println(msg);
+    }
+
+    private void bid() {
+        for ( Item item : ItemHandler.getInstance().getArray()) {
+            if(item.getItemNumber() == msg.getItemID()) {
+                this.msg.setItem(item);
+                System.out.println(msg);
+                if(msg.getAmount() > item.getCurrentBid() && msg.getAmount() >= item.getMinPrice()) {
+                    this.msg.getItem().setCurrentBid(msg.getAmount());
+                    this.msg.getItem().setTopBidder(this.user);
+                    this.msg.getItem().addBidder(this.user);
+                    this.msg.setType(MessageType.HIGHEST);
+                    notifyUsers();
+                }
+            }
+        }
+    }
+
+
+    private void offerConfirm() throws IOException {
+      // send offer confirmed MSG
+        this.msg.setType(MessageType.OFFER_CONFIRM);
+        msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
+        ItemHandler.getInstance().add(item);
+        oos.writeUnshared(msg);
+        oos.flush();
+        msg.setType(MessageType.NEW);
+        notifyUsers();
+    }
+
+    private void notifyUsers() {
+        for(ClientHandler handler : ClientHandlers.getInstance().getArray()) {
+            if(handler != this) {
+                try {
+                    handler.setMsg(this.msg);
+                    handler.sendMessage();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void offerDenied(String err) throws IOException {
+       // send offer denied MSG
+        this.msg.setType("OFFER-DENIED");
+        this.msg.setReason(err);
+        oos.writeUnshared(msg);
+        oos.flush();
+    }
+
+    public void sendMessage() throws IOException {
+        this.oos.writeUnshared(this.msg);
+        //System.out.println("Sending this msg: " + msg);
+        this.oos.flush();
+    }
+
+    public ObjectOutputStream getOos() {
+        return oos;
+    }
+
+    public Message getMsg() {
+        return msg;
+    }
+
+    public void setMsg(Message msg) {
+        this.msg = msg;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
