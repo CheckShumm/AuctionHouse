@@ -72,9 +72,14 @@ public class UDPHandler extends Thread{
 
                     break;
                 case MessageType.DEREGISTER:
-
                     if (auth.login()) {
-                        reply.setType(MessageType.DEREG_CONF);
+                        String deregVerify = ItemHandler.getInstance().verifyUser(this.user);
+                        if(deregVerify.equals(MessageType.DEREG_CONF)) {
+                            reply.setType(MessageType.DEREG_CONF);
+                        } else {
+                            reply.setReason(deregVerify);
+                            reply.setType(MessageType.DEREG_DENIED);   
+                        }
                     }
                     break;
                 default:
