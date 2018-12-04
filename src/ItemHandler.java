@@ -30,4 +30,20 @@ public class ItemHandler  {
         item.setItemNumber(itemCount);
         list.add(item);
     }
+    
+    public String verifyUser (User user) {
+        for(Item item : this.list) {
+            if(!item.getSold()) {
+                if(item.getOwner() == user) {
+                    return "user has item up for auction";
+                }
+                
+                if(item.getTopBidder() == user) {
+                    return "user is top bidder for item";
+                }
+            }
+        }
+        return MessageType.DEREG_CONF;
+    }
+
 }
