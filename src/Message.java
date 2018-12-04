@@ -132,11 +132,12 @@ public class Message implements Serializable{
                 break;
             case MessageType.BID:
                 sb.append(MessageType.BID + " ")
-                        .append(user.getRequestCount())
+                        .append(user.getRequestCount() + " ")
                         .append(item.getItemNumber() + " ")
                         .append(this.amount);
                 break;
             case MessageType.HIGHEST:
+                this.item.setCurrentBid(amount);
                 sb.append(MessageType.HIGHEST + " ")
                         .append("#" + item.getItemNumber() + " ")
                         .append(item.getName() + " ")

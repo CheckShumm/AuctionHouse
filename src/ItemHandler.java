@@ -33,12 +33,15 @@ public class ItemHandler  {
     
     public String verifyUser (User user) {
         for(Item item : this.list) {
+            System.out.println("item's owner: " + item.getOwner().getUsername());
+            System.out.println("dereg user: " + user.getUsername());
+            System.out.println("Top Bidder: " + item.getTopBidder());
             if(!item.getSold()) {
-                if(item.getOwner() == user) {
+                if(item.getOwner().getUsername().equals(user.getUsername())) {
                     return "user has item up for auction";
                 }
                 
-                if(item.getTopBidder() == user) {
+                if(item.getTopBidder().getUsername().equals(user.getUsername())) {
                     return "user is top bidder for item";
                 }
             }

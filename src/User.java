@@ -52,7 +52,10 @@ public class User implements Serializable {
     public void setRequestCount(int requestCount) {
         this.requestCount = requestCount;
     }
-    
+
+    public void incRequestCount() {
+        this.requestCount++;
+    }
     
     
     public void login() {

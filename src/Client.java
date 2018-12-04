@@ -25,6 +25,7 @@ public class Client {
     InetAddress clientAddress;
 
     DatagramPacket packet;
+    private Socket socket;
 
     private int serverUDPPort;
     private int serverTCPPort;
@@ -66,15 +67,9 @@ public class Client {
             Scanner in = new Scanner(System.in);
 
             DatagramSocket udpSocket = new DatagramSocket();
-            Socket socket = new Socket(serverAddress, clientTCPPort);
 
-            oos = new ObjectOutputStream(socket.getOutputStream());
+            connect();
 
-            // let server know client is connected
-            msg.setType("CONNECT");
-            msg.setUser(user);
-            oos.writeUnshared(msg);
-            oos.flush(); // flush stream
             System.out.println("Welcome to Auction House!");
 
             Listener listener = new Listener(socket,this);
@@ -106,7 +101,7 @@ public class Client {
                                     packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
                                     udpSocket.send(packet);
 //                                    Client.wait = true;
-                                    Thread.sleep(1000);
+                                    Thread.sleep(3000);
 
                                     break;
                                 case MessageType.LOGIN:
@@ -117,17 +112,25 @@ public class Client {
                                     packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
                                     udpSocket.send(packet);
 //                                    Client.wait = true;
-                                    Thread.sleep(1000);
+                                    Thread.sleep(3000);
 
                                     break;
                                 case MessageType.OFFER:
+
                                     int offerCount = 0;
+
                                     while (!inputMessage.getType().equals(MessageType.OFFER_CONFIRM) & offerCount < 3) {
                                         msg.setItem(offer());
                                         msg.setType(MessageType.OFFER);
                                         System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
-                                        oos.writeUnshared(msg);
-                                        oos.flush();
+                                        try {
+                                            oos.writeUnshared(msg);
+                                            oos.flush();
+                                        } catch(Exception e) {
+                                            System.out.println("somethings wrong");
+                                            reconnect(3000);
+                                        }
+
                                         offerCount++;
                                         Thread.sleep(1000);
                                     }
@@ -137,29 +140,55 @@ public class Client {
                                     msg.setType(MessageType.BID);
                                     bid();
                                     System.out.println("Bidding on " + msg.getItemID());
-                                    oos.writeUnshared(msg);
-                                    oos.flush();
+                                    if(socket.isConnected()) {
+                                        try {
+                                            oos.writeUnshared(msg);
+                                            oos.flush();
+                                        } catch(Exception e) {
+                                            System.out.println("somethings wrong");
+                                            reconnect(3000);
+                                        }
+                                    }
+
                                     break;
-                                case "exit":
-                                    System.out.println("Exiting the auction!");
+                                case MessageType.DEREGISTER:
                                     msg.setType(MessageType.DEREGISTER);
-                                    ois.close();
-                                    oos.close();
-                                    socket.close();
+                                    msg.setUser(Client.user);
+
+                                    msgByte = Help.serialize(msg);
+                                    packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
+                                    udpSocket.send(packet);
+                                    reconnect(3000);
+//                                    System.out.println("Exiting the auction!");
+//                                    ois.close();
+//                                    oos.close();
+//                                    socket.close();
                                     break;
                             }
                         } catch (IOException e) {
-                            System.out.println("Client menu IO exception!");
+                            System.out.println("unable to connect to server!");
                             e.printStackTrace();
                         }
                          catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        listener.start();
+                             try {
+                                 reconnect(3000);
+                             } catch (InterruptedException | IOException e1) {
+                                 e1.printStackTrace();
+                             }
+                         }
+                         catch(Exception e ){
+                            System.out.println("somethings wrong");
+                             try {
+                                 reconnect(3000);
+                             } catch (InterruptedException | IOException e1) {
+//                                 e1.printStackTrace();
+                             }
+                         }
                     }
                 }
             });
             udpListener.start();
+            listener.start();
             menu.start();
         }
         catch (ConnectException e) {
@@ -207,7 +236,6 @@ public class Client {
         System.out.println("Enter password");
         String password = in.nextLine();
 
-        User user = new User();
         user.setUsername(username);
         user.setPassword(password);
         return user;
@@ -222,7 +250,7 @@ public class Client {
         } else {
             return ("Enter 'offer' to put an item up for auction\n"+
                     "Enter 'bid' if you would like to bid on an item\n"+
-                    "Enter 'exit' if you would like to exit\n");
+                    "Enter 'deregister' if you would like to exit\n");
         }
 
     }
@@ -237,6 +265,28 @@ public class Client {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void reconnect(int timeout) throws InterruptedException, IOException {
+        int attempts = 0;
+        while(attempts < 8 && !socket.isConnected()) {
+            attempts++;
+            Thread.sleep(timeout);
+            System.out.println("Attempting to connect (" + attempts + ") ...");
+            connect();
+        }
+    }
+
+    public void connect() throws IOException {
+        socket = new Socket(serverAddress, clientTCPPort);
+
+        oos = new ObjectOutputStream(socket.getOutputStream());
+
+        // let server know client is connected
+        msg.setType("CONNECT");
+        msg.setUser(user);
+        oos.writeUnshared(msg);
+        oos.flush(); // flush stream
     }
 
     public static void main(String args[]) {

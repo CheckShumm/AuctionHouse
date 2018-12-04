@@ -27,7 +27,7 @@ public class Server {
 
     //UDP
     DatagramSocket udpSocket;
-    private byte[] buf = new byte[256];
+    private byte[] buf = new byte[999];
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
         new Server(args[0]);

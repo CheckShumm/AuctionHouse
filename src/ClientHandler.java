@@ -51,6 +51,7 @@ public class ClientHandler extends Thread{
                     default:
                         break;
                 }
+                user.incRequestCount();
             }
         } catch (IOException | ClassNotFoundException e) {
             try {

@@ -8,7 +8,7 @@ public class UDPListener extends Thread{
 
     private DatagramSocket socket;
     private DatagramPacket packet;
-    private byte[] buf = new byte[256];
+    private byte[] buf = new byte[999];
 
     private Message message;
     private User user;
@@ -50,6 +50,12 @@ public class UDPListener extends Thread{
             case MessageType.UNREGISTERED:
                 unregistered(msg);
                 break;
+            case MessageType.DEREG_CONF:
+                deregConfirm(msg);
+                break;
+            case MessageType.DEREG_DENIED:
+                deregDenied(msg);
+                break;
             default:
                 break;
         }
@@ -71,8 +77,18 @@ public class UDPListener extends Thread{
         Client.wait = false;
     }
 
-    public void deregConfirm() {
+    public void deregConfirm(Message msg) {
+        Client.isAuth = msg.getUser().isAuth();
+        Client.user = msg.getUser();
+        Client.user.setAuth(false);
+        System.out.println(msg);
         System.out.println("You are logged off now");
+    }
+
+    public void deregDenied(Message msg) {
+        Client.isAuth = msg.getUser().isAuth();
+        Client.user = msg.getUser();
+        System.out.println(msg);
     }
 
 }

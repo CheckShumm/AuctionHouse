@@ -87,6 +87,7 @@ public class UDPHandler extends Thread{
                     break;
             }
 
+            user.incRequestCount();
             user = auth.getUser();
             reply.setUser(auth.getUser());
             replyByte = Help.serialize(reply);
