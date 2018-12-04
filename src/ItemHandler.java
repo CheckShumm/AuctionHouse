@@ -41,9 +41,9 @@ public class ItemHandler  {
                     return "user has item up for auction";
                 }
 //                System.out.println();
-                if(item.getTopBidder().getUsername().equals(user.getUsername())) {
-                    return "user is top bidder for item";
-                }
+//                if(item.getTopBidder().getUsername().equals(user.getUsername())) {
+//                    return "user is top bidder for item";
+//                }
             }
         }
         return MessageType.DEREG_CONF;
