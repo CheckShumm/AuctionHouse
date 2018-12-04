@@ -7,7 +7,8 @@ public class User implements Serializable {
     private String username;
     private String password;
     private boolean isAuth;
-
+    private int requestCount;
+    
     public User() {
         this.isAuth = false;
     }
@@ -44,6 +45,16 @@ public class User implements Serializable {
         this.password = password;
     }
 
+    public int getRequestCount() {
+        return requestCount;
+    }
+
+    public void setRequestCount(int requestCount) {
+        this.requestCount = requestCount;
+    }
+    
+    
+    
     public void login() {
 
     }
