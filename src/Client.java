@@ -72,6 +72,8 @@ public class Client {
 
             // let server know client is connected
             msg.setType("CONNECT");
+            msg.setUser(user);
+            oos.writeUnshared(msg);
             oos.flush(); // flush stream
             System.out.println("Welcome to Auction House!");
 
@@ -153,12 +155,10 @@ public class Client {
                          catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-
+                        listener.start();
                     }
                 }
             });
-
-            listener.start();
             udpListener.start();
             menu.start();
         }
