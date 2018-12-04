@@ -2,10 +2,16 @@
     Server processes UDP and TCP depending on the message type.
  */
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.*;
 
 public class Server {
+
+    //Logger
+    private static Logger log = LogManager.getLogger("auctionhouse");
 
     //gets configuration from config.properties file
     private Environment env = new Environment();
@@ -49,7 +55,8 @@ public class Server {
         auctionTimer = new AuctionTimer();
         auctionTimer.run();
 
-        System.out.println("Server is running");
+//        System.out.println("Server is running");
+        log.trace("Server is running");
 
         try {
             Thread tcpSockets = new Thread () {
@@ -79,16 +86,16 @@ public class Server {
 
                             //Output packet
                             Message incomingMsg = (Message) Help.deserialize(packet.getData());
-                            System.out.println(incomingMsg);
+//                            System.out.println(incomingMsg);
 
                             UDPHandler udpHandler = new UDPHandler(udpSocket, packet);
                             udpHandlers.add(udpHandler);
                             udpHandler.start();
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+//                        e.printStackTrace();
                     } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+//                        e.printStackTrace();
                     }
                 }
             };

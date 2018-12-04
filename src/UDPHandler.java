@@ -1,3 +1,6 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.awt.*;
 import java.io.*;
 import java.net.DatagramPacket;
@@ -7,6 +10,9 @@ import java.net.Socket;
 import java.sql.SQLException;
 
 public class UDPHandler extends Thread{
+
+    //Logger
+    private static Logger log = LogManager.getLogger("auctionhouse");
 
     //UDP
     private DatagramSocket socket = null;
@@ -37,6 +43,7 @@ public class UDPHandler extends Thread{
 
         try {
             incomingMsg = (Message) Help.deserialize(packet.getData());
+            log.trace(incomingMsg);
             user = incomingMsg.getUser();
             auth.setUser(user);
         } catch (ClassNotFoundException e) {
@@ -72,15 +79,17 @@ public class UDPHandler extends Thread{
 
                     break;
                 case MessageType.DEREGISTER:
+
                     if (auth.login()) {
                         String deregVerify = ItemHandler.getInstance().verifyUser(this.user);
                         if(deregVerify.equals(MessageType.DEREG_CONF)) {
                             reply.setType(MessageType.DEREG_CONF);
                         } else {
                             reply.setReason(deregVerify);
-                            reply.setType(MessageType.DEREG_DENIED);   
+                            reply.setType(MessageType.DEREG_DENIED);
                         }
                     }
+                    log.trace(reply);
                     break;
                 default:
                     reply.setType(MessageType.NULL);
@@ -92,6 +101,8 @@ public class UDPHandler extends Thread{
             reply.setUser(auth.getUser());
             replyByte = Help.serialize(reply);
             packet = new DatagramPacket(replyByte, replyByte.length, address, port);
+
+            log.trace(reply);
 
             //send reply message
             socket.send(packet);

@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+                                                                                                               Main-Class: LogSampleTest
+
+                                                                                                               java -Dlog4j.configurationFile=file:/Users/hc/projects/AuctionHouse/src/log4j2.properties -jar auctionhouse.jar

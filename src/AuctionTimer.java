@@ -8,7 +8,7 @@ public class AuctionTimer extends Thread{
     private Timer timer;
 
     private int elapsedTime;
-    private int timeOut = 60;
+    private int timeOut = 300;
     private TimerTask task;
 
     public AuctionTimer(){
@@ -43,6 +43,7 @@ public class AuctionTimer extends Thread{
 
     private void handleItem(Item item) {
         item.setSold(true);
+        item.getOwner().decItemCount();
         notifyBidders(item, MessageType.BID_OVER);
 
         if( item.getCurrentBid() == 0) {

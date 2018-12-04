@@ -1,11 +1,16 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ClientHandler extends Thread{
+
+    //Logger
+    private static Logger log = LogManager.getLogger("auctionhouse");
 
     // TCP
     private Socket socket = null;
@@ -30,10 +35,11 @@ public class ClientHandler extends Thread{
 
             while (true) {
                 this.msg = (Message)ois.readObject();
+                log.trace(msg  + " " + msg.getUser().getRequestCount() + " " + socket.getRemoteSocketAddress().toString()) ;
                 switch(msg.getType()) {
                     case "OFFER":
                         offer();
-                        if (item.getMinPrice() < 0 ) {
+                        if (item.getMinPrice() < 0 && msg.getUser().getItemCount() > 3) {
                             offerDenied("price not valid ");
                         } else {
                             offerConfirm();
@@ -46,7 +52,8 @@ public class ClientHandler extends Thread{
                         break;
                     case "CONNECT":
                         this.user = msg.getUser();
-                        System.out.println("Client has connected");
+//                        System.out.println("Client has connected");
+                        log.trace("Client has connected" + " " + msg.getUser().getRequestCount() + " " + socket.getRemoteSocketAddress().toString());
                         break;
                     default:
                         break;
@@ -57,22 +64,25 @@ public class ClientHandler extends Thread{
             try {
                 socket.close();
             } catch (IOException e1) {
-                e1.printStackTrace();
+//                e1.printStackTrace();
             }
         }
     }
 
     private void offer() throws IOException, ClassNotFoundException {
         item = msg.getItem();
-        System.out.println(msg);
+//        System.out.println(msg);
     }
 
     private void bid() {
-        for ( Item item : ItemHandler.getInstance().getArray()) {
-            if(item.getItemNumber() == msg.getItemID()) {
-                this.msg.setItem(item);
-                System.out.println(msg);
-                if(msg.getAmount() > item.getCurrentBid() && msg.getAmount() >= item.getMinPrice()) {
+        for ( int i = 0; i < ItemHandler.getInstance().getArray().size(); i++) {
+            if(ItemHandler.getInstance().getArray().get(i).getItemNumber() == msg.getItemID() ) {
+                this.msg.setItem(ItemHandler.getInstance().getArray().get(i));
+//                System.out.println(msg);
+                if(msg.getAmount() > ItemHandler.getInstance().getArray().get(i).getCurrentBid() &&
+                        msg.getAmount() >= ItemHandler.getInstance().getArray().get(i).getCurrentBid()) {
+                    ItemHandler.getInstance().getArray().get(i).setTopBidder(msg.getUser());
+//                    System.out.println("USERNAME in BID: " +ItemHandler.getInstance().getArray().get(i).getTopBidder().getUsername());
                     this.msg.getItem().setCurrentBid(msg.getAmount());
                     this.msg.getItem().setTopBidder(this.user);
                     this.msg.getItem().addBidder(this.user);
@@ -89,7 +99,9 @@ public class ClientHandler extends Thread{
         this.msg.setType(MessageType.OFFER_CONFIRM);
         msg.getItem().setStartTime(Server.auctionTimer.getElapsedTime());
         ItemHandler.getInstance().add(item);
+        msg.getUser().incItemCount();
         oos.writeUnshared(msg);
+        log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
         oos.flush();
         msg.setType(MessageType.NEW);
         notifyUsers();
@@ -101,8 +113,9 @@ public class ClientHandler extends Thread{
                 try {
                     handler.setMsg(this.msg);
                     handler.sendMessage();
+                    log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
                 } catch (IOException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         }
@@ -113,11 +126,13 @@ public class ClientHandler extends Thread{
         this.msg.setType("OFFER-DENIED");
         this.msg.setReason(err);
         oos.writeUnshared(msg);
+        log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
         oos.flush();
     }
 
     public void sendMessage() throws IOException {
         this.oos.writeUnshared(this.msg);
+        log.trace(msg);
         //System.out.println("Sending this msg: " + msg);
         this.oos.flush();
     }

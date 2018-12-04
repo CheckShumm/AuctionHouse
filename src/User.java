@@ -8,9 +8,11 @@ public class User implements Serializable {
     private String password;
     private boolean isAuth;
     private int requestCount;
+    private int itemCount;
     
     public User() {
         this.isAuth = false;
+        this.itemCount = 0;
     }
 
     public int getId() {
@@ -60,6 +62,22 @@ public class User implements Serializable {
     
     public void login() {
 
+    }
+
+    public void incItemCount() {
+        this.itemCount++;
+    }
+
+    public void decItemCount() {
+        this.itemCount--;
+    }
+
+    public int getItemCount() {
+        return itemCount;
+    }
+
+    public void setItemCount(int itemCount) {
+        this.itemCount = itemCount;
     }
 
     public static void main(String args[]) {

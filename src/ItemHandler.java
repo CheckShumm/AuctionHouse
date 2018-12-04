@@ -33,14 +33,14 @@ public class ItemHandler  {
     
     public String verifyUser (User user) {
         for(Item item : this.list) {
-            System.out.println("item's owner: " + item.getOwner().getUsername());
-            System.out.println("dereg user: " + user.getUsername());
-            System.out.println("Top Bidder: " + item.getTopBidder());
+//            System.out.println("item's owner: " + item.getOwner().getUsername());
+//            System.out.println("dereg user: " + user.getUsername());
+//            System.out.println("Top Bidder: " + item.getTopBidder().getUsername());
             if(!item.getSold()) {
                 if(item.getOwner().getUsername().equals(user.getUsername())) {
                     return "user has item up for auction";
                 }
-                
+//                System.out.println();
                 if(item.getTopBidder().getUsername().equals(user.getUsername())) {
                     return "user is top bidder for item";
                 }
@@ -48,5 +48,20 @@ public class ItemHandler  {
         }
         return MessageType.DEREG_CONF;
     }
+
+//    public boolean updateItem(Item item) {
+//        for(Item item : this.list) {
+//
+//            if(item.getSold()) {
+//                if(item.getOwner().getUsername().equals(user.getUsername())) {
+//                    return "user has item up for auction";
+//                }
+//                System.out.println();
+//                if(item.getTopBidder().getUsername().equals(user.getUsername())) {
+//                    return "user is top bidder for item";
+//                }
+//            }
+//        }
+//    }
 
 }

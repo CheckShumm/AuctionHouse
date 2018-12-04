@@ -2,12 +2,17 @@
 Client Class
  */
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
-import java.util.logging.Logger;
 
 public class Client {
+
+    //Logger
+    private static Logger log = LogManager.getLogger("auctionhouse");
 
     //gets configuration from config.properties file
     private Environment env;
@@ -100,6 +105,7 @@ public class Client {
                                     msgByte = Help.serialize(msg);
                                     packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
                                     udpSocket.send(packet);
+                                    log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
 //                                    Client.wait = true;
                                     Thread.sleep(3000);
 
@@ -111,6 +117,7 @@ public class Client {
 
                                     packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
                                     udpSocket.send(packet);
+                                    log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
 //                                    Client.wait = true;
                                     Thread.sleep(3000);
 
@@ -125,9 +132,10 @@ public class Client {
                                         System.out.println("Offering " + msg.getItem().getName() + " to the Auction House");
                                         try {
                                             oos.writeUnshared(msg);
+                                            log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
                                             oos.flush();
                                         } catch(Exception e) {
-                                            System.out.println("somethings wrong");
+                                            System.out.println("Somethings Wrong. Please restart application");
                                             reconnect(3000);
                                         }
 
@@ -138,11 +146,13 @@ public class Client {
                                     break;
                                 case MessageType.BID:
                                     msg.setType(MessageType.BID);
+                                    msg.setUser(user);
                                     bid();
                                     System.out.println("Bidding on " + msg.getItemID());
                                     if(socket.isConnected()) {
                                         try {
                                             oos.writeUnshared(msg);
+                                            log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
                                             oos.flush();
                                         } catch(Exception e) {
                                             System.out.println("somethings wrong");
@@ -158,6 +168,7 @@ public class Client {
                                     msgByte = Help.serialize(msg);
                                     packet = new DatagramPacket(msgByte, msgByte.length, serverAddress, clientUDPPort);
                                     udpSocket.send(packet);
+                                    log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
                                     reconnect(3000);
 //                                    System.out.println("Exiting the auction!");
 //                                    ois.close();
@@ -167,6 +178,7 @@ public class Client {
                             }
                         } catch (IOException e) {
                             System.out.println("unable to connect to server!");
+                            log.warn("unable to connect to server!" + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
                             e.printStackTrace();
                         }
                          catch (InterruptedException e) {
@@ -187,8 +199,9 @@ public class Client {
                     }
                 }
             });
-            udpListener.start();
+
             listener.start();
+            udpListener.start();
             menu.start();
         }
         catch (ConnectException e) {
@@ -286,6 +299,7 @@ public class Client {
         msg.setType("CONNECT");
         msg.setUser(user);
         oos.writeUnshared(msg);
+        log.trace(msg + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
         oos.flush(); // flush stream
     }
 

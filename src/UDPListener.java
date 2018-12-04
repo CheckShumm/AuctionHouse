@@ -1,3 +1,6 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
@@ -5,6 +8,9 @@ import java.net.DatagramSocket;
 import java.net.Socket;
 
 public class UDPListener extends Thread{
+
+    //Logger
+    private static Logger log = LogManager.getLogger("auctionhouse");
 
     private DatagramSocket socket;
     private DatagramPacket packet;
@@ -26,6 +32,7 @@ public class UDPListener extends Thread{
                 socket.receive(packet);
 //                System.out.println("UDP Message receieve");
                 message = (Message) Help.deserialize(packet.getData());
+                log.trace(message + " " + message.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
                 user = message.getUser();
                 process(message);
             }
@@ -68,12 +75,13 @@ public class UDPListener extends Thread{
 //        System.out.println("user authenticated: " + msg.getUser().isAuth());
         Client.isAuth = msg.getUser().isAuth();
         Client.user = msg.getUser();
-        System.out.println(message + "\n");
+//        log.trace(message + " " + message.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
         Client.wait = false;
     }
 
     public void unregistered(Message msg) {
-        System.out.println(msg);
+//        log.trace(message + " " + message.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
+
         Client.wait = false;
     }
 
@@ -81,14 +89,15 @@ public class UDPListener extends Thread{
         Client.isAuth = msg.getUser().isAuth();
         Client.user = msg.getUser();
         Client.user.setAuth(false);
-        System.out.println(msg);
-        System.out.println("You are logged off now");
+//        log.trace(message + " " + message.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
+        log.trace("You are logged off now" + " " + msg.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
     }
 
     public void deregDenied(Message msg) {
         Client.isAuth = msg.getUser().isAuth();
         Client.user = msg.getUser();
-        System.out.println(msg);
+//        log.trace("You are logged off now" + " " + message.getUser().getRequestCount() + " " + this.socket.getRemoteSocketAddress());
+
     }
 
 }

@@ -1,4 +1,6 @@
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -6,6 +8,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class Auth {
+
+    //Logger
+    private static Logger log = LogManager.getLogger("auctionhouse");
 
     Database db;
     Connection connect;
@@ -33,12 +38,14 @@ public class Auth {
 
             return false;
         } catch (MySQLIntegrityConstraintViolationException e) {
-            e.printStackTrace();
-            System.out.println("Unable to register user because of duplicate username");
+//            e.printStackTrace();
+//            System.out.println("Unable to register user because of duplicate username");
+            log.trace("AUTH Unable to register user because of duplicate username");
             return false;
         } catch(SQLException ex) {
-            System.out.println("Unable to connect to database");
-            ex.printStackTrace();
+//            System.out.println("Unable to connect to database");
+            log.trace("AUTH Unable to connect to database");
+//            ex.printStackTrace();
             return false;
         }
     }
@@ -61,8 +68,9 @@ public class Auth {
 
             return false;
         } catch(SQLException ex) {
-            System.out.println("Unable to connect to database");
-            ex.printStackTrace();
+//            System.out.println("Unable to connect to database");
+            log.trace("AUTH Unable to connect to database");
+//            ex.printStackTrace();
             return false;
         }
     }

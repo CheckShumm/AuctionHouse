@@ -36,3 +36,7 @@ Add jar to project in intellij
 4. add jar (lower section)
 5. find mysql-connector-java-5.1.47.jar in folder
 
+run executable jar
+
+java -Dlog4j.configurationFile=file:<LOG4J2 PROPERTIES PATH> -jar <NAME>.jar
+
